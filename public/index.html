@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Генератор Титулов Пати-Райха</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+        .imperial-font { font-family: 'Cinzel', serif; }
+        .modern-font { font-family: 'Inter', sans-serif; }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-shadow {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .royal-border {
+            border: 3px solid;
+            border-image: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700) 1;
+        }
+    </style>
+</head>
+<body class="modern-font gradient-bg min-h-screen">
+<div x-data="titleGenerator()" x-init="init()" class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="imperial-font text-5xl font-bold text-white mb-4 drop-shadow-lg">
+            ⚔️ ПАТИ-РАЙХ ⚔️
+        </h1>
+        <p class="text-xl text-white/90 imperial-font">
+            Генератор Императорских Титулов
+        </p>
+        <p class="text-lg text-white/80 mt-2">
+            Во славу Party Kaiser и Коньячных Рыцарей
+        </p>
+
+        <!-- Navigation -->
+        <div class="mt-6 space-x-4">
+            <a href="/hall-of-fame" class="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-colors">
+                🏆 Зал Славы
+            </a>
+            <a href="/profile" class="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-colors">
+                👤 Профиль
+            </a>
+            <a x-show="user && user.role === 'admin'" href="/admin" class="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-colors">
+                ⚙️ Админ-панель
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Form -->
+    <div x-show="!showRegistration && !showSuccess" class="max-w-4xl mx-auto bg-white rounded-2xl card-shadow overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6">
+            <h2 class="imperial-font text-3xl font-semibold text-white text-center">
+                🏰 Подача на Получение Титула 🏰
+            </h2>
+        </div>
+
+        <form @submit.prevent="generateTitle" class="p-8 space-y-6">
+            <!-- Name Field -->
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-3 imperial-font">
+                    👑 Имя будущего подданного *
+                </label>
+                <input
+                        x-model="formData.name"
+                        type="text"
+                        required
+                        placeholder="Введите имя..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors text-lg"
+                >
+            </div>
+
+            <!-- Location Field -->
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-3 imperial-font">
+                    🏛️ Место происхождения
+                </label>
+                <input
+                        x-model="formData.location"
+                        type="text"
+                        placeholder="Город, страна или регион..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors text-lg"
+                >
+            </div>
+
+            <!-- Request Type -->
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-3 imperial-font">
+                    ⚖️ Тип запроса
+                </label>
+                <select
+                        x-model="formData.requestType"
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors text-lg"
+                >
+                    <option value="">Выберите тип запроса...</option>
+                    <option value="Титул для себя">Титул для себя</option>
+                    <option value="Титул для друга">Титул для друга</option>
+                    <option value="Повышение существующего титула">Повышение существующего титула</option>
+                    <option value="Особый запрос">Особый запрос</option>
+                </select>
+            </div>
+
+            <!-- Achievements Field -->
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-3 imperial-font">
+                    🏆 Достижения и заслуги *
+                </label>
+                <textarea
+                        x-model="formData.achievements"
+                        required
+                        rows="4"
+                        placeholder="Опишите достижения, победы, особые умения или качества..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors text-lg resize-none"
+                ></textarea>
+            </div>
+
+            <!-- Stories Field -->
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-3 imperial-font">
+                    📜 Истории и легенды
+                </label>
+                <textarea
+                        x-model="formData.stories"
+                        rows="4"
+                        placeholder="Расскажите интересные истории, приключения или памятные моменты..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors text-lg resize-none"
+                ></textarea>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center pt-6">
+                <button
+                        type="submit"
+                        :disabled="isLoading"
+                        class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-4 rounded-lg text-xl font-semibold imperial-font shadow-lg hover:from-purple-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                    <span x-show="!isLoading">⚔️ Получить Императорский Титул ⚔️</span>
+                    <span x-show="isLoading" class="flex items-center justify-center">
+                            <svg class="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Генерация титула...
+                        </span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Results Section -->
+    <div x-show="result.title && !showRegistration && !showSuccess" x-transition class="max-w-4xl mx-auto mt-8 bg-gradient-to-r from-yellow-400 via-yellow-500 to-yellow-600 rounded-2xl card-shadow p-8 royal-border">
+        <div class="text-center mb-6">
+            <h3 class="imperial-font text-3xl font-bold text-gray-900 mb-2">
+                🎭 ИМПЕРАТОРСКИЙ УКАЗ 🎭
+            </h3>
+            <p class="text-lg text-gray-800">
+                Во имя Party Kaiser и священных реликвий
+            </p>
+        </div>
+
+        <div class="bg-white/90 rounded-xl p-6 mb-6">
+            <h4 class="imperial-font text-2xl font-semibold text-center text-purple-800 mb-4">
+                👑 ВАШ ТИТУЛ 👑
+            </h4>
+            <p x-text="result.title" class="text-xl text-gray-900 text-center leading-relaxed font-medium"></p>
+        </div>
+
+        <!-- Oath Section -->
+        <div x-show="result.oath" class="bg-red-600 rounded-xl p-6 text-white">
+            <h4 class="imperial-font text-2xl font-semibold text-center mb-4">
+                ⚔️ КЛЯТВА ВЕРНОСТИ ⚔️
+            </h4>
+            <p x-text="result.oath" class="text-lg text-center leading-relaxed italic"></p>
+
+            <div class="text-center mt-6">
+                <button
+                        @click="takeOath"
+                        class="bg-white text-red-600 px-6 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors imperial-font"
+                >
+                    ✋ Принести Клятву
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Registration Form -->
+    <div x-show="showRegistration && !showSuccess" x-transition class="max-w-4xl mx-auto mt-8 bg-white rounded-2xl card-shadow overflow-hidden">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6">
+            <h2 class="imperial-font text-3xl font-semibold text-white text-center">
+                🏰 Регистрация в Пати-Райхе 🏰
+            </h2>
+        </div>
+
+        <form @submit.prevent="register" class="p-8 space-y-6">
+            <!-- Username Field -->
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-3 imperial-font">
+                    👤 Имя пользователя *
+                </label>
+                <input
+                        x-model="registrationData.username"
+                        type="text"
+                        required
+                        placeholder="Введите имя пользователя..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors text-lg"
+                >
+            </div>
+
+            <!-- Password Field -->
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-3 imperial-font">
+                    🔒 Пароль *
+                </label>
+                <input
+                        x-model="registrationData.password"
+                        type="password"
+                        required
+                        placeholder="Введите пароль..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors text-lg"
+                >
+            </div>
+
+            <!-- Email Field -->
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-3 imperial-font">
+                    📧 Электронная почта
+                </label>
+                <input
+                        x-model="registrationData.email"
+                        type="email"
+                        placeholder="Введите email..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors text-lg"
+                >
+            </div>
+
+            <!-- Full Name Field -->
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-3 imperial-font">
+                    👑 Полное имя *
+                </label>
+                <input
+                        x-model="registrationData.fullName"
+                        type="text"
+                        required
+                        placeholder="Введите полное имя..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors text-lg"
+                >
+            </div>
+
+            <!-- Submit Button -->
+            <div class="text-center pt-6">
+                <button
+                        type="submit"
+                        :disabled="isRegistering"
+                        class="bg-gradient-to-r from-purple-600 to-indigo-600 text-white px-8 py-4 rounded-lg text-xl font-semibold imperial-font shadow-lg hover:from-purple-700 hover:to-indigo-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                    <span x-show="!isRegistering">⚔️ Зарегистрироваться ⚔️</span>
+                    <span x-show="isRegistering" class="flex items-center justify-center">
+                            <svg class="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24">
+                                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Регистрация...
+                        </span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Success Modal -->
+    <div x-show="showSuccess" x-transition class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="showSuccess = false">
+        <div class="bg-gradient-to-r from-purple-600 to-indigo-600 rounded-2xl p-8 max-w-md mx-4 text-center" @click.stop>
+            <h3 class="imperial-font text-3xl font-bold text-white mb-4">
+                🎉 ПОЗДРАВЛЯЕМ! 🎉
+            </h3>
+            <p class="text-white text-lg mb-6">
+                Вы официально стали подданным Пати-Райха!<br>
+                Да здравствует Party Kaiser!
+            </p>
+            <div class="space-x-4">
+                <a
+                        href="/profile"
+                        class="bg-white text-purple-600 px-6 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors"
+                >
+                    Перейти в Профиль
+                </a>
+                <button
+                        @click="showSuccess = false"
+                        class="bg-gray-600 text-white px-6 py-3 rounded-lg font-bold text-lg hover:bg-gray-700 transition-colors"
+                >
+                    Закрыть
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div x-show="error" x-transition class="max-w-4xl mx-auto mt-8 bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg">
+        <p x-text="error" class="text-center font-semibold"></p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-white/80 mt-12">
+        <p class="text-lg imperial-font">
+            🍾 Во славу Коньячных Рыцарей и священного Коньячного Меча 🍾
+        </p>
+        <p class="text-sm mt-2">
+            Powered by Party Kaiser AI
+        </p>
+    </footer>
+</div>
+
+<script>
+    function titleGenerator() {
+        return {
+            formData: {
+                name: '',
+                location: '',
+                achievements: '',
+                stories: '',
+                requestType: ''
+            },
+            registrationData: {
+                username: '',
+                password: '',
+                email: '',
+                fullName: ''
+            },
+            result: {
+                title: '',
+                oath: '',
+                tempData: null
+            },
+            user: null,
+            isLoading: false,
+            isRegistering: false,
+            error: '',
+            showRegistration: false,
+            showSuccess: false,
+
+            init() {
+                // Load user data from localStorage if available
+                const storedUser = localStorage.getItem('user');
+                if (storedUser) {
+                    this.user = JSON.parse(storedUser);
+                }
+            },
+
+            async generateTitle() {
+                this.isLoading = true;
+                this.error = '';
+                this.result = { title: '', oath: '', tempData: null };
+
+                try {
+                    const response = await fetch('/generate-title', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(this.formData)
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Произошла ошибка при генерации титула');
+                    }
+
+                    this.result = {
+                        title: data.title,
+                        oath: data.oath,
+                        tempData: data.tempData
+                    };
+
+                    // Pre-fill registration form with the name
+                    this.registrationData.fullName = data.tempData.name;
+
+                    // Scroll to results
+                    setTimeout(() => {
+                        document.querySelector('[x-show="result.title && !showRegistration && !showSuccess"]')?.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }, 100);
+
+                } catch (error) {
+                    this.error = error.message || 'Произошла неожиданная ошибка';
+                } finally {
+                    this.isLoading = false;
+                }
+            },
+
+            takeOath() {
+                this.showRegistration = true;
+                this.error = '';
+                setTimeout(() => {
+                    document.querySelector('[x-show="showRegistration && !showSuccess"]')?.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }, 100);
+            },
+
+            async register() {
+                this.isRegistering = true;
+                this.error = '';
+
+                try {
+                    const response = await fetch('/api/register', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            ...this.registrationData,
+                            tempData: this.result.tempData
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Ошибка создания аккаунта');
+                    }
+
+                    // Store token and user data
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    this.user = data.user;
+
+                    // Show success modal
+                    this.showSuccess = true;
+                    this.showRegistration = false;
+
+                } catch (error) {
+                    this.error = error.message || 'Произошла неожиданная ошибка';
+                } finally {
+                    this.isRegistering = false;
+                }
+            }
+        }
+    }
+</script>
+</body>
+</html>

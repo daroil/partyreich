@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль - Пати-Райх</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
+
+        .imperial-font { font-family: 'Cinzel', serif; }
+        .modern-font { font-family: 'Inter', sans-serif; }
+
+        .gradient-bg {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        }
+
+        .card-shadow {
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+
+        .royal-border {
+            border: 3px solid;
+            border-image: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700) 1;
+        }
+    </style>
+</head>
+<body class="modern-font gradient-bg min-h-screen">
+<div x-data="profileManager()" x-init="init()" class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="imperial-font text-5xl font-bold text-white mb-4 drop-shadow-lg">
+            👤 ПРОФИЛЬ ПОДДАННОГО 👤
+        </h1>
+        <p class="text-xl text-white/90 imperial-font">
+            Личные Владения в Пати-Райхе
+        </p>
+
+        <!-- Navigation -->
+        <div class="mt-6 space-x-4">
+            <a href="/" class="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-colors">
+                🏰 Главная
+            </a>
+            <a href="/hall-of-fame" class="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-colors">
+                🏆 Зал Славы
+            </a>
+            <button @click="logout" class="bg-red-500/80 text-white px-4 py-2 rounded-lg hover:bg-red-600/80 transition-colors">
+                🚪 Выйти
+            </button>
+        </div>
+    </div>
+
+    <!-- Login Form (if not authenticated) -->
+    <div x-show="!isAuthenticated && !loading" class="max-w-md mx-auto bg-white rounded-2xl card-shadow overflow-hidden">
+        <div class="bg-gradient-to-r from-blue-600 to-cyan-600 p-6">
+            <h2 class="imperial-font text-3xl font-semibold text-white text-center">
+                🔐 Вход в Аккаунт
+            </h2>
+        </div>
+
+        <form @submit.prevent="login" class="p-8 space-y-6">
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-2">Имя пользователя</label>
+                <input
+                        x-model="loginData.username"
+                        type="text"
+                        required
+                        placeholder="Введите имя пользователя..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                >
+            </div>
+
+            <div>
+                <label class="block text-lg font-semibold text-gray-800 mb-2">Пароль</label>
+                <input
+                        x-model="loginData.password"
+                        type="password"
+                        required
+                        placeholder="Введите пароль..."
+                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
+                >
+            </div>
+
+            <div class="text-center">
+                <button
+                        type="submit"
+                        :disabled="isLoggingIn"
+                        class="bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-lg text-xl font-semibold imperial-font shadow-lg hover:from-blue-700 hover:to-cyan-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                    <span x-show="!isLoggingIn">🛡️ Войти</span>
+                    <span x-show="isLoggingIn">Вход...</span>
+                </button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Loading -->
+    <div x-show="loading" class="text-center py-12">
+        <div class="inline-flex items-center text-white text-xl">
+            <svg class="animate-spin h-8 w-8 mr-3" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            Загрузка профиля...
+        </div>
+    </div>
+
+    <!-- Profile Content -->
+    <div x-show="isAuthenticated && !loading" class="max-w-6xl mx-auto space-y-8">
+
+        <!-- User Info Card -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden">
+            <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-6 text-white">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h2 class="imperial-font text-3xl font-bold" x-text="profile?.full_name"></h2>
+                        <p class="text-purple-200" x-text="`@${profile?.username}`"></p>
+                        <p class="text-purple-200" x-text="profile?.location || 'Неизвестные земли'"></p>
+                    </div>
+                    <div class="text-right">
+                        <div class="text-4xl mb-2" x-text="profile?.role === 'admin' ? '👑' : '🛡️'"></div>
+                        <p class="text-sm" x-text="profile?.role === 'admin' ? 'Администратор' : 'Подданный'"></p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Current Title -->
+            <div class="p-6">
+                <div class="bg-yellow-50 rounded-lg p-6 royal-border">
+                    <h3 class="imperial-font text-2xl font-semibold text-purple-800 mb-4 text-center">
+                        👑 Ваш Императорский Титул 👑
+                    </h3>
+                    <p class="text-xl text-gray-900 text-center leading-relaxed font-medium" x-text="profile?.title"></p>
+                </div>
+
+                <div class="text-center mt-4 text-sm text-gray-500">
+                    Подданный с <span x-text="formatDate(profile?.created_at)"></span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Admin Panel Access -->
+        <div x-show="profile?.role === 'admin'" class="bg-gradient-to-r from-red-600 to-pink-600 rounded-2xl card-shadow p-6">
+            <div class="text-center">
+                <h3 class="imperial-font text-2xl font-bold text-white mb-4">
+                    ⚔️ Панель Администратора ⚔️
+                </h3>
+                <p class="text-white/90 mb-6">
+                    Управляйте подданными и их титулами как истинный Party Kaiser
+                </p>
+                <a href="/admin" class="bg-white text-red-600 px-6 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors">
+                    🏛️ Перейти в Админ-панель
+                </a>
+            </div>
+        </div>
+
+        <!-- Title Expansion Section -->
+        <div class="bg-white rounded-2xl card-shadow overflow-hidden">
+            <div class="bg-gradient-to-r from-green-600 to-teal-600 p-6">
+                <h3 class="imperial-font text-2xl font-semibold text-white text-center">
+                    ⬆️ Расширение Титула ⬆️
+                </h3>
+                <p class="text-green-100 text-center mt-2">
+                    Добавьте новые достижения и истории для расширения вашего титула
+                </p>
+            </div>
+
+            <form @submit.prevent="expandTitle" class="p-8 space-y-6">
+                <div>
+                    <label class="block text-lg font-semibold text-gray-800 mb-3 imperial-font">
+                        🏆 Новые Достижения *
+                    </label>
+                    <textarea
+                            x-model="expansionData.achievements"
+                            required
+                            rows="4"
+                            placeholder="Опишите ваши новые достижения, победы и заслуги..."
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-colors text-lg resize-none"
+                    ></textarea>
+                </div>
+
+                <div>
+                    <label class="block text-lg font-semibold text-gray-800 mb-3 imperial-font">
+                        📜 Новые Истории и Легенды
+                    </label>
+                    <textarea
+                            x-model="expansionData.stories"
+                            rows="4"
+                            placeholder="Расскажите новые истории, приключения и памятные моменты..."
+                            class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 focus:outline-none transition-colors text-lg resize-none"
+                    ></textarea>
+                </div>
+
+                <div class="text-center">
+                    <button
+                            type="submit"
+                            :disabled="isExpanding"
+                            class="bg-gradient-to-r from-green-600 to-teal-600 text-white px-8 py-4 rounded-lg text-xl font-semibold imperial-font shadow-lg hover:from-green-700 hover:to-teal-700 transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <span x-show="!isExpanding">✨ Расширить Титул</span>
+                        <span x-show="isExpanding" class="flex items-center justify-center">
+                                <svg class="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                Расширение титула...
+                            </span>
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Current Achievements and Stories -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <!-- Achievements -->
+            <div class="bg-white rounded-2xl card-shadow p-6">
+                <h3 class="imperial-font text-2xl font-semibold text-purple-800 mb-4 text-center">
+                    🏆 Достижения
+                </h3>
+                <div class="bg-gray-50 rounded-lg p-4 min-h-32">
+                    <p class="text-gray-800 whitespace-pre-wrap" x-text="profile?.achievements || 'Нет записанных достижений'"></p>
+                </div>
+            </div>
+
+            <!-- Stories -->
+            <div class="bg-white rounded-2xl card-shadow p-6">
+                <h3 class="imperial-font text-2xl font-semibold text-purple-800 mb-4 text-center">
+                    📜 Истории и Легенды
+                </h3>
+                <div class="bg-gray-50 rounded-lg p-4 min-h-32">
+                    <p class="text-gray-800 whitespace-pre-wrap" x-text="profile?.stories || 'Нет записанных историй'"></p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Success Modal -->
+    <div x-show="showSuccess" x-transition class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" @click="showSuccess = false">
+        <div class="bg-gradient-to-r from-green-600 to-teal-600 rounded-2xl p-8 max-w-md mx-4 text-center" @click.stop>
+            <h3 class="imperial-font text-3xl font-bold text-white mb-4">
+                🎉 ТИТУЛ РАСШИРЕН! 🎉
+            </h3>
+            <div class="bg-white/20 rounded-lg p-4 mb-6">
+                <p class="text-white font-semibold mb-2">Ваш новый титул:</p>
+                <p class="text-white text-lg" x-text="newTitle"></p>
+            </div>
+            <button
+                    @click="closeSuccessModal"
+                    class="bg-white text-green-600 px-6 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors"
+            >
+                Отлично!
+            </button>
+        </div>
+    </div>
+
+    <!-- Error Message -->
+    <div x-show="error" x-transition class="max-w-4xl mx-auto mt-8 bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg">
+        <p x-text="error" class="text-center font-semibold"></p>
+    </div>
+
+    <!-- Footer -->
+    <footer class="text-center text-white/80 mt-12">
+        <p class="text-lg imperial-font">
+            🛡️ Честь и слава подданным Пати-Райха 🛡️
+        </p>
+    </footer>
+</div>
+
+<script>
+    function profileManager() {
+        return {
+            isAuthenticated: false,
+            profile: null,
+            loading: false,
+            isLoggingIn: false,
+            isExpanding: false,
+            error: '',
+            showSuccess: false,
+            newTitle: '',
+
+            loginData: {
+                username: '',
+                password: ''
+            },
+
+            expansionData: {
+                achievements: '',
+                stories: ''
+            },
+
+            async init() {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    this.isAuthenticated = true;
+                    await this.loadProfile();
+                }
+            },
+
+            async login() {
+                this.isLoggingIn = true;
+                this.error = '';
+
+                try {
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(this.loginData)
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Ошибка входа');
+                    }
+
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    this.isAuthenticated = true;
+                    await this.loadProfile();
+
+                } catch (error) {
+                    this.error = error.message || 'Произошла неожиданная ошибка';
+                } finally {
+                    this.isLoggingIn = false;
+                }
+            },
+
+            async loadProfile() {
+                this.loading = true;
+                this.error = '';
+
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('/api/profile', {
+                        headers: {
+                            'Authorization': `Bearer ${token}`
+                        }
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            this.logout();
+                            return;
+                        }
+                        throw new Error(data.error || 'Ошибка загрузки профиля');
+                    }
+
+                    this.profile = data;
+
+                } catch (error) {
+                    this.error = error.message || 'Произошла неожиданная ошибка';
+                } finally {
+                    this.loading = false;
+                }
+            },
+
+            async expandTitle() {
+                this.isExpanding = true;
+                this.error = '';
+
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('/api/expand-title', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(this.expansionData)
+                    });
+
+                    const data = await response.json();
+
+                    if (!response.ok) {
+                        throw new Error(data.error || 'Ошибка расширения титула');
+                    }
+
+                    this.newTitle = data.newTitle;
+                    this.showSuccess = true;
+                    this.expansionData = { achievements: '', stories: '' };
+
+                    // Reload profile to get updated data
+                    await this.loadProfile();
+
+                } catch (error) {
+                    this.error = error.message || 'Произошла неожиданная ошибка';
+                } finally {
+                    this.isExpanding = false;
+                }
+            },
+
+            closeSuccessModal() {
+                this.showSuccess = false;
+                this.newTitle = '';
+            },
+
+            logout() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                this.isAuthenticated = false;
+                this.profile = null;
+                this.loginData = { username: '', password: '' };
+            },
+
+            formatDate(dateString) {
+                const date = new Date(dateString);
+                return date.toLocaleDateString('ru-RU', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+            }
+        }
+    }
+</script>
+</body>
+</html>

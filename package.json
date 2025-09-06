@@ -1,0 +1,33 @@
+{
+  "name": "partyreich-title-generator",
+  "version": "1.0.0",
+  "description": "Imperial title generator for Partyreich realm",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "nodemon server.js"
+  },
+  "keywords": [
+    "title-generator",
+    "partyreich",
+    "express",
+    "openai",
+    "sqlite"
+  ],
+  "author": "Party Kaiser",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "openai": "^4.20.1",
+    "dotenv": "^16.3.1",
+    "sqlite3": "^5.1.6",
+    "bcrypt": "^5.1.1",
+    "jsonwebtoken": "^9.0.2"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.2"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}
