@@ -234,7 +234,7 @@ app.post('/generate-title', async (req, res) => {
 
         // Generate title using OpenAI
         const completion = await openai.chat.completions.create({
-            model: "gpt-4",
+            model: "gpt-4.1",
             messages: [
                 {
                     role: "system",
@@ -245,7 +245,7 @@ app.post('/generate-title', async (req, res) => {
                     content: userPrompt
                 }
             ],
-            max_tokens: 200,
+            max_tokens: 20000,
             temperature: 0.8
         });
 
@@ -322,12 +322,12 @@ app.post('/api/expand-title', authenticateToken, async (req, res) => {
 
             try {
                 const completion = await openai.chat.completions.create({
-                    model: "gpt-4",
+                    model: "gpt-4.1",
                     messages: [
                         { role: "system", content: SYSTEM_PROMPT },
                         { role: "user", content: userPrompt }
                     ],
-                    max_tokens: 250,
+                    max_tokens: 25000,
                     temperature: 0.8
                 });
 
@@ -417,12 +417,12 @@ app.put('/api/admin/users/:id/title', authenticateToken, requireAdmin, async (re
             if (stories) userPrompt += `\nИстории: ${stories}`;
 
             const completion = await openai.chat.completions.create({
-                model: "gpt-4",
+                model: "gpt-4.1",
                 messages: [
                     { role: "system", content: SYSTEM_PROMPT },
                     { role: "user", content: userPrompt }
                 ],
-                max_tokens: 200,
+                max_tokens: 20000,
                 temperature: 0.8
             });
 
