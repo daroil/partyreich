@@ -54,7 +54,8 @@ CREATE TABLE IF NOT EXISTS title_history (
 
 // Initialize OpenAI
 const openai = new OpenAI({
-    apiKey: process.env.OPENAI_API_KEY,
+	apiKey: process.env.DEEPSEEK_API_KEY,
+	baseURL: "https://api.deepseek.com",
 });
 
 // Middleware
@@ -234,7 +235,7 @@ app.post('/generate-title', async (req, res) => {
 
         // Generate title using OpenAI
         const completion = await openai.chat.completions.create({
-            model: "gpt-4.1",
+            model: "deepseek-chat",
             messages: [
                 {
                     role: "system",
