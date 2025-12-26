@@ -1,802 +1,679 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Админ-панель - Пати-Райх</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
-
-        .imperial-font {
-            font-family: 'Cinzel', serif;
-        }
-
-        .modern-font {
-            font-family: 'Inter', sans-serif;
-        }
-
-        .gradient-bg {
-            background: linear-gradient(135deg, #dc2626 0%, #7c2d12 100%);
-        }
-
-        .card-shadow {
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-
-        .royal-border {
-            border: 3px solid;
-            border-image: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700) 1;
-        }
-
-        .line-clamp-2 {
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-    </style>
-</head>
-<body class="modern-font gradient-bg min-h-screen">
-<div x-data="adminPanel()" x-init="init()" class="container mx-auto px-4 py-4 md:py-8">
-    <!-- Header -->
-    <div class="text-center mb-6 md:mb-8">
-        <h1 class="imperial-font text-3xl md:text-5xl font-bold text-white mb-2 md:mb-4 drop-shadow-lg">
-            ⚔️ ПАНЕЛЬ PARTY KAISER ⚔️
-        </h1>
-        <p class="text-lg md:text-xl text-white/90 imperial-font">
-            Административное Управление Пати-Райхом
-        </p>
-        <p class="text-sm md:text-lg text-white/80 mt-2">
-            Власть над титулами и подданными
-        </p>
-
-        <!-- Navigation -->
-        <div class="mt-4 md:mt-6 flex flex-wrap justify-center gap-2 md:gap-4">
-            <a href="/"
-               class="bg-white/20 text-white px-3 py-2 md:px-4 text-sm md:text-base rounded-lg hover:bg-white/30 transition-colors">
-                🏰 Главная
-            </a>
-            <a href="/profile"
-               class="bg-white/20 text-white px-3 py-2 md:px-4 text-sm md:text-base rounded-lg hover:bg-white/30 transition-colors">
-                👤 Профиль
-            </a>
-            <a href="/hall-of-fame"
-               class="bg-white/20 text-white px-3 py-2 md:px-4 text-sm md:text-base rounded-lg hover:bg-white/30 transition-colors">
-                🏆 Зал Славы
-            </a>
-        </div>
-    </div>
-
-    <!-- Access Denied (if not admin) -->
-    <div x-show="!isAuthorized && !loading" class="max-w-md mx-auto bg-white rounded-2xl card-shadow overflow-hidden">
-        <div class="bg-gradient-to-r from-red-600 to-red-800 p-6">
-            <h2 class="imperial-font text-2xl md:text-3xl font-semibold text-white text-center">
-                🚫 Доступ Запрещён
-            </h2>
-        </div>
-        <div class="p-6 md:p-8 text-center">
-            <div class="text-5xl md:text-6xl mb-4">⚔️</div>
-            <p class="text-lg md:text-xl text-gray-800 mb-6">
-                Только Party Kaiser имеет доступ к этой панели
-            </p>
-            <a href="/profile"
-               class="bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-bold text-base md:text-lg hover:bg-red-700 transition-colors inline-block">
-                Вернуться в Профиль
-            </a>
-        </div>
-    </div>
-
-    <!-- Loading -->
-    <div x-show="loading" class="text-center py-12">
-        <div class="inline-flex items-center text-white text-lg md:text-xl">
-            <svg class="animate-spin h-6 w-6 md:h-8 md:w-8 mr-3" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
-                        fill="none"></circle>
-                <path class="opacity-75" fill="currentColor"
-                      d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Загрузка...
-        </div>
-    </div>
-
-    <!-- Admin Content -->
-    <div x-show="isAuthorized && !loading" class="max-w-7xl mx-auto space-y-6 md:space-y-8">
-
-        <!-- Stats Overview -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6">
-            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-4 md:p-6 text-center card-shadow">
-                <div class="text-2xl md:text-4xl mb-1 md:mb-2">👥</div>
-                <div class="text-xl md:text-2xl font-bold text-gray-800" x-text="users.length"></div>
-                <div class="text-xs md:text-base text-gray-600">Всего</div>
-            </div>
-            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-4 md:p-6 text-center card-shadow">
-                <div class="text-2xl md:text-4xl mb-1 md:mb-2">🏆</div>
-                <div class="text-xl md:text-2xl font-bold text-gray-800"
-                     x-text="users.filter(u => u.oath_taken).length"></div>
-                <div class="text-xs md:text-base text-gray-600">Подданных</div>
-            </div>
-            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-4 md:p-6 text-center card-shadow">
-                <div class="text-2xl md:text-4xl mb-1 md:mb-2">👑</div>
-                <div class="text-xl md:text-2xl font-bold text-gray-800"
-                     x-text="users.filter(u => u.role === 'admin').length"></div>
-                <div class="text-xs md:text-base text-gray-600">Админов</div>
-            </div>
-            <div class="bg-white/90 backdrop-blur-sm rounded-xl p-4 md:p-6 text-center card-shadow">
-                <div class="text-2xl md:text-4xl mb-1 md:mb-2">📜</div>
-                <div class="text-xl md:text-2xl font-bold text-gray-800"
-                     x-text="users.filter(u => u.title).length"></div>
-                <div class="text-xs md:text-base text-gray-600">Титулов</div>
-            </div>
-        </div>
-
-        <!-- Search and Filter -->
-        <div class="bg-white rounded-2xl card-shadow p-4 md:p-6">
-            <div class="flex flex-col md:flex-row gap-3 md:gap-4 items-stretch md:items-center">
-                <div class="flex-1">
-                    <input
-                            x-model="searchTerm"
-                            @input="filterUsers"
-                            type="text"
-                            placeholder="Поиск..."
-                            class="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors"
-                    >
-                </div>
-                <div class="flex items-center gap-3 md:gap-4">
-                    <select
-                            x-model="filterRole"
-                            @change="filterUsers"
-                            class="flex-1 md:flex-none px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors"
-                    >
-                        <option value="all">Все роли</option>
-                        <option value="admin">Администраторы</option>
-                        <option value="user">Пользователи</option>
-                    </select>
-                    <span class="text-sm md:text-base text-gray-600 font-semibold whitespace-nowrap"
-                          x-text="`${filteredUsers.length}`"></span>
-                </div>
-            </div>
-        </div>
-
-        <!-- Users Management -->
-        <div class="bg-white rounded-2xl card-shadow overflow-hidden">
-            <div class="bg-gradient-to-r from-red-600 to-red-800 p-4 md:p-6">
-                <h2 class="imperial-font text-2xl md:text-3xl font-semibold text-white text-center">
-                    👥 Управление Подданными
-                </h2>
-            </div>
-
-            <!-- Desktop Table -->
-            <div class="hidden md:block overflow-x-auto">
-                <table class="w-full">
-                    <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Пользователь</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Титул</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Роль</th>
-                        <th class="px-6 py-4 text-left text-sm font-semibold text-gray-900">Действия</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <template x-for="user in filteredUsers" :key="user.id">
-                        <tr class="border-t border-gray-200 hover:bg-gray-50">
-                            <td class="px-6 py-4">
-                                <div class="flex items-center">
-                                    <div>
-                                        <div class="font-semibold text-gray-900" x-text="user.full_name"></div>
-                                        <div class="text-sm text-gray-500" x-text="`@${user.username}`"></div>
-                                        <div class="text-sm text-gray-500"
-                                             x-text="user.location || 'Неизвестные земли'"></div>
-                                    </div>
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="text-sm text-gray-800 line-clamp-2"
-                                     x-text="user.title || 'Без титула'"></div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <span class="text-sm text-gray-800"
-                                      x-text="user.role === 'admin' ? 'Администратор' : 'Пользователь'"></span>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="flex flex-wrap gap-2">
-                                    <button
-                                            @click="openEditModal(user)"
-                                            class="bg-red-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-red-700 transition-colors"
-                                    >
-                                        ✍️ Титул
-                                    </button>
-                                    <button
-                                            @click="openPasswordModal(user)"
-                                            class="bg-blue-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                                    >
-                                        🔑 Пароль
-                                    </button>
-                                    <button
-                                            @click="openHistoryModal(user.id)"
-                                            class="bg-gray-600 text-white px-3 py-1.5 text-sm rounded-lg hover:bg-gray-700 transition-colors"
-                                    >
-                                        📜 История
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                    </template>
-                    </tbody>
-                </table>
-            </div>
-
-            <!-- Mobile Cards -->
-            <div class="md:hidden divide-y divide-gray-200">
-                <template x-for="user in filteredUsers" :key="user.id">
-                    <div class="p-4 hover:bg-gray-50">
-                        <div class="flex justify-between items-start mb-3">
-                            <div class="flex-1">
-                                <div class="font-semibold text-gray-900 text-base" x-text="user.full_name"></div>
-                                <div class="text-sm text-gray-500" x-text="`@${user.username}`"></div>
-                                <div class="text-sm text-gray-500" x-text="user.location || 'Неизвестные земли'"></div>
-                            </div>
-                            <span class="text-xs bg-gray-100 px-2 py-1 rounded"
-                                  x-text="user.role === 'admin' ? 'Админ' : 'Юзер'"></span>
-                        </div>
-                        <div class="text-sm text-gray-700 mb-3 line-clamp-2" x-text="user.title || 'Без титула'"></div>
-                        <div class="flex flex-wrap gap-2">
-                            <button
-                                    @click="openEditModal(user)"
-                                    class="flex-1 bg-red-600 text-white px-3 py-2 text-sm rounded-lg hover:bg-red-700 transition-colors"
-                            >
-                                ✍️ Титул
-                            </button>
-                            <button
-                                    @click="openPasswordModal(user)"
-                                    class="flex-1 bg-blue-600 text-white px-3 py-2 text-sm rounded-lg hover:bg-blue-700 transition-colors"
-                            >
-                                🔑 Пароль
-                            </button>
-                            <button
-                                    @click="openHistoryModal(user.id)"
-                                    class="w-full bg-gray-600 text-white px-3 py-2 text-sm rounded-lg hover:bg-gray-700 transition-colors"
-                            >
-                                📜 История
-                            </button>
-                        </div>
-                    </div>
-                </template>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Title Modal -->
-    <div x-show="showEditModal" x-transition
-         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-         @click="showEditModal = false">
-        <div class="bg-white rounded-2xl p-4 md:p-8 max-w-2xl w-full card-shadow max-h-[90vh] overflow-y-auto"
-             @click.stop>
-            <h3 class="imperial-font text-2xl md:text-3xl font-bold text-red-800 text-center mb-4 md:mb-6">
-                ⚔️ Редактирование Титула ⚔️
-            </h3>
-            <div class="space-y-4 md:space-y-6">
-                <div>
-                    <label class="block text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3 imperial-font">
-                        👑 Пользователь
-                    </label>
-                    <p class="text-sm md:text-base text-gray-800" x-text="selectedUser?.full_name"></p>
-                    <p class="text-xs md:text-sm text-gray-500" x-text="`@${selectedUser?.username}`"></p>
-                </div>
-                <div>
-                    <label class="block text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3 imperial-font">
-                        📜 Текущий титул
-                    </label>
-                    <p class="text-sm md:text-base text-gray-800" x-text="selectedUser?.title || 'Без титула'"></p>
-                </div>
-                <div>
-                    <label class="block text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3 imperial-font">
-                        🏆 Новые достижения
-                    </label>
-                    <textarea
-                            x-model="editForm.achievements"
-                            rows="3"
-                            placeholder="Опишите новые достижения..."
-                            class="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors resize-none"
-                    ></textarea>
-                </div>
-                <div>
-                    <label class="block text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3 imperial-font">
-                        📖 Новые истории
-                    </label>
-                    <textarea
-                            x-model="editForm.stories"
-                            rows="3"
-                            placeholder="Расскажите новые истории..."
-                            class="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors resize-none"
-                    ></textarea>
-                </div>
-                <div>
-                    <label class="block text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3 imperial-font">
-                        👑 Новый титул
-                    </label>
-                    <input
-                            x-model="editForm.title"
-                            type="text"
-                            placeholder="Введите новый титул..."
-                            class="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border-2 border-gray-300 rounded-lg focus:border-red-500 focus:outline-none transition-colors"
-                    >
-                </div>
-                <div class="flex items-center">
-                    <input
-                            x-model="editForm.useAI"
-                            type="checkbox"
-                            id="useAI"
-                            class="h-4 w-4 md:h-5 md:w-5 text-red-600 focus:ring-red-500 border-gray-300 rounded"
-                    >
-                    <label for="useAI" class="ml-2 text-sm md:text-base text-gray-800">
-                        Использовать AI
-                    </label>
-                </div>
-                <div class="flex flex-col sm:flex-row justify-center gap-2 md:gap-4">
-                    <button
-                            @click="generateAITitle"
-                            :disabled="isLoading || !editForm.useAI"
-                            class="bg-purple-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-bold text-sm md:text-base hover:bg-purple-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <span x-show="!isLoading">🤖 Сгенерировать</span>
-                        <span x-show="isLoading" class="flex items-center justify-center">
-                                <svg class="animate-spin h-4 w-4 md:h-5 md:w-5 mr-2" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                            stroke-width="4" fill="none"></circle>
-                                    <path class="opacity-75" fill="currentColor"
-                                          d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Генерация...
-                            </span>
-                    </button>
-                    <button
-                            @click="saveTitle"
-                            :disabled="isLoading"
-                            class="bg-red-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-bold text-sm md:text-base hover:bg-red-700 transition-colors disabled:opacity-50"
-                    >
-                        💾 Сохранить
-                    </button>
-                    <button
-                            @click="showEditModal = false"
-                            class="bg-gray-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-bold text-sm md:text-base hover:bg-gray-700 transition-colors"
-                    >
-                        Отмена
-                    </button>
-                </div>
-                <div x-show="error"
-                     class="bg-red-100 border border-red-400 text-red-700 px-3 md:px-4 py-2 md:py-3 rounded-lg text-center text-sm md:text-base">
-                    <p x-text="error"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Change Password Modal -->
-    <div x-show="showPasswordModal" x-transition
-         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-         @click="showPasswordModal = false">
-        <div class="bg-white rounded-2xl p-4 md:p-8 max-w-md w-full card-shadow" @click.stop>
-            <h3 class="imperial-font text-2xl md:text-3xl font-bold text-blue-800 text-center mb-4 md:mb-6">
-                🔑 Смена Пароля
-            </h3>
-            <div class="space-y-4 md:space-y-6">
-                <div>
-                    <label class="block text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3">
-                        👤 Пользователь
-                    </label>
-                    <p class="text-sm md:text-base text-gray-800" x-text="selectedUser?.full_name"></p>
-                    <p class="text-xs md:text-sm text-gray-500" x-text="`@${selectedUser?.username}`"></p>
-                </div>
-                <div>
-                    <label class="block text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3">
-                        🔒 Новый пароль
-                    </label>
-                    <input
-                            x-model="passwordForm.newPassword"
-                            type="password"
-                            placeholder="Минимум 6 символов"
-                            class="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
-                    >
-                </div>
-                <div>
-                    <label class="block text-base md:text-lg font-semibold text-gray-800 mb-2 md:mb-3">
-                        🔒 Подтвердите пароль
-                    </label>
-                    <input
-                            x-model="passwordForm.confirmPassword"
-                            type="password"
-                            placeholder="Повторите пароль"
-                            class="w-full px-3 md:px-4 py-2 md:py-3 text-sm md:text-base border-2 border-gray-300 rounded-lg focus:border-blue-500 focus:outline-none transition-colors"
-                    >
-                </div>
-                <div class="flex flex-col sm:flex-row justify-center gap-2 md:gap-4">
-                    <button
-                            @click="changePassword"
-                            :disabled="isLoading"
-                            class="bg-blue-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-bold text-sm md:text-base hover:bg-blue-700 transition-colors disabled:opacity-50"
-                    >
-                        <span x-show="!isLoading">💾 Сменить пароль</span>
-                        <span x-show="isLoading" class="flex items-center justify-center">
-                                <svg class="animate-spin h-4 w-4 md:h-5 md:w-5 mr-2" viewBox="0 0 24 24">
-                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor"
-                                            stroke-width="4" fill="none"></circle>
-                                    <path class="opacity-75" fill="currentColor"
-                                          d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                </svg>
-                                Сохранение...
-                            </span>
-                    </button>
-                    <button
-                            @click="showPasswordModal = false"
-                            class="bg-gray-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-bold text-sm md:text-base hover:bg-gray-700 transition-colors"
-                    >
-                        Отмена
-                    </button>
-                </div>
-                <div x-show="passwordError"
-                     class="bg-red-100 border border-red-400 text-red-700 px-3 md:px-4 py-2 md:py-3 rounded-lg text-center text-sm md:text-base">
-                    <p x-text="passwordError"></p>
-                </div>
-                <div x-show="passwordSuccess"
-                     class="bg-green-100 border border-green-400 text-green-700 px-3 md:px-4 py-2 md:py-3 rounded-lg text-center text-sm md:text-base">
-                    <p x-text="passwordSuccess"></p>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Title History Modal -->
-    <div x-show="showHistoryModal" x-transition
-         class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
-         @click="showHistoryModal = false">
-        <div class="bg-white rounded-2xl p-4 md:p-8 max-w-3xl w-full card-shadow overflow-y-auto max-h-[90vh]"
-             @click.stop>
-            <h3 class="imperial-font text-2xl md:text-3xl font-bold text-red-800 text-center mb-4 md:mb-6">
-                📜 История Титулов
-            </h3>
-            <div x-show="historyLoading" class="text-center py-4">
-                <div class="inline-flex items-center text-gray-800 text-base md:text-lg">
-                    <svg class="animate-spin h-5 w-5 md:h-6 md:w-6 mr-3" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
-                                fill="none"></circle>
-                        <path class="opacity-75" fill="currentColor"
-                              d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                    </svg>
-                    Загрузка...
-                </div>
-            </div>
-            <div x-show="!historyLoading && history.length === 0"
-                 class="text-center text-gray-800 text-sm md:text-base">
-                <p>История титулов отсутствует</p>
-            </div>
-            <div x-show="!historyLoading && history.length > 0" class="overflow-x-auto">
-                <table class="w-full text-sm">
-                    <thead class="bg-gray-50">
-                    <tr>
-                        <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-gray-900">
-                            Дата
-                        </th>
-                        <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-gray-900">
-                            Старый
-                        </th>
-                        <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-gray-900">
-                            Новый
-                        </th>
-                        <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-gray-900 hidden md:table-cell">
-                            Причина
-                        </th>
-                        <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs md:text-sm font-semibold text-gray-900 hidden md:table-cell">
-                            Кем
-                        </th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <template x-for="entry in history" :key="entry.id">
-                        <tr class="border-t border-gray-200">
-                            <td class="px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm"
-                                x-text="formatDate(entry.created_at)"></td>
-                            <td class="px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm truncate max-w-xs"
-                                x-text="entry.old_title || 'Без титула'"></td>
-                            <td class="px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm truncate max-w-xs"
-                                x-text="entry.new_title"></td>
-                            <td class="px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm hidden md:table-cell"
-                                x-text="entry.reason"></td>
-                            <td class="px-2 md:px-4 py-2 md:py-3 text-xs md:text-sm hidden md:table-cell"
-                                x-text="entry.modified_by_username"></td>
-                        </tr>
-                    </template>
-                    </tbody>
-                </table>
-            </div>
-            <div class="text-center mt-4 md:mt-6">
-                <button
-                        @click="showHistoryModal = false"
-                        class="bg-gray-600 text-white px-4 md:px-6 py-2 md:py-3 rounded-lg font-bold text-sm md:text-base hover:bg-gray-700 transition-colors"
-                >
-                    Закрыть
-                </button>
-            </div>
-        </div>
-    </div>
-    <!-- Footer -->
-    <footer class="text-center text-white/80 mt-8 md:mt-12">
-        <p class="text-base md:text-lg imperial-font">
-            🍾 Во славу Party Kaiser и Коньячных Рыцарей 🍾
-        </p>
-        <p class="text-xs md:text-sm mt-2">
-            Powered by Party Kaiser AI
-        </p>
-    </footer>
-</div>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Админ-панель - Пати-Райх</title>
+<script src="https://cdn.tailwindcss.com"></script>
 <script>
-    function adminPanel() {
-        return {
-            users: [],
-            filteredUsers: [],
-            searchTerm: '',
-            filterRole: 'all',
-            isAuthorized: false,
-            loading: true,
-            isLoading: false,
-            error: '',
-            showEditModal: false,
-            showPasswordModal: false,
-            showHistoryModal: false,
-            selectedUser: null,
-            editForm: {
-                achievements: '',
-                stories: '',
-                title: '',
-                useAI: false
-            },
-            passwordForm: {
-                newPassword: '',
-                confirmPassword: ''
-            },
-            passwordError: '',
-            passwordSuccess: '',
-            history: [],
-            historyLoading: false,
-
-            async init() {
-                this.loading = true;
-                this.error = '';
-                try {
-                    const token = localStorage.getItem('token');
-                    if (!token) {
-                        this.isAuthorized = false;
-                        this.loading = false;
-                        return;
-                    }
-
-                    const response = await fetch('/api/admin/users', {
-                        headers: {
-                            'Authorization': `Bearer ${token}`
-                        }
-                    });
-
-                    if (response.status === 403 || response.status === 401) {
-                        this.isAuthorized = false;
-                        this.loading = false;
-                        return;
-                    }
-
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Ошибка загрузки данных');
-                    }
-
-                    this.users = data;
-                    this.filteredUsers = [...data];
-                    this.isAuthorized = true;
-                    this.filterUsers();
-                } catch (error) {
-                    this.error = error.message || 'Произошла ошибка';
-                    this.isAuthorized = false;
-                } finally {
-                    this.loading = false;
-                }
-            },
-
-            filterUsers() {
-                const term = this.searchTerm.toLowerCase();
-                this.filteredUsers = this.users.filter(user => {
-                    const matchesSearch =
-                        user.full_name.toLowerCase().includes(term) ||
-                        user.username.toLowerCase().includes(term) ||
-                        (user.title && user.title.toLowerCase().includes(term));
-                    const matchesRole =
-                        this.filterRole === 'all' ||
-                        user.role === this.filterRole;
-                    return matchesSearch && matchesRole;
-                });
-            },
-
-            openEditModal(user) {
-                this.selectedUser = user;
-                this.editForm = {
-                    achievements: '',
-                    stories: '',
-                    title: user.title || '',
-                    useAI: false
-                };
-                this.error = '';
-                this.showEditModal = true;
-            },
-
-            openPasswordModal(user) {
-                this.selectedUser = user;
-                this.passwordForm = {
-                    newPassword: '',
-                    confirmPassword: ''
-                };
-                this.passwordError = '';
-                this.passwordSuccess = '';
-                this.showPasswordModal = true;
-            },
-
-            async changePassword() {
-                this.passwordError = '';
-                this.passwordSuccess = '';
-
-                if (!this.passwordForm.newPassword || this.passwordForm.newPassword.length < 6) {
-                    this.passwordError = 'Пароль должен содержать минимум 6 символов';
-                    return;
-                }
-
-                if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
-                    this.passwordError = 'Пароли не совпадают';
-                    return;
-                }
-
-                this.isLoading = true;
-
-                try {
-                    const response = await fetch(`/api/admin/users/${this.selectedUser.id}/password`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        },
-                        body: JSON.stringify({
-                            newPassword: this.passwordForm.newPassword
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Ошибка смены пароля');
-                    }
-
-                    this.passwordSuccess = 'Пароль успешно изменён!';
-                    this.passwordForm = {
-                        newPassword: '',
-                        confirmPassword: ''
-                    };
-
-                    setTimeout(() => {
-                        this.showPasswordModal = false;
-                        this.passwordSuccess = '';
-                    }, 2000);
-                } catch (error) {
-                    this.passwordError = error.message || 'Произошла ошибка при смене пароля';
-                } finally {
-                    this.isLoading = false;
-                }
-            },
-
-            async generateAITitle() {
-                if (!this.editForm.useAI || !this.selectedUser) return;
-
-                this.isLoading = true;
-                this.error = '';
-
-                try {
-                    const response = await fetch(`/api/admin/users/${this.selectedUser.id}/title`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        },
-                        body: JSON.stringify({
-                            useAI: true,
-                            achievements: this.editForm.achievements,
-                            stories: this.editForm.stories
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Ошибка генерации титула');
-                    }
-
-                    this.editForm.title = data.newTitle;
-                } catch (error) {
-                    this.error = error.message || 'Произошла ошибка при генерации титула';
-                } finally {
-                    this.isLoading = false;
-                }
-            },
-
-            async saveTitle() {
-                if (!this.selectedUser) return;
-
-                this.isLoading = true;
-                this.error = '';
-
-                try {
-                    const response = await fetch(`/api/admin/users/${this.selectedUser.id}/title`, {
-                        method: 'PUT',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        },
-                        body: JSON.stringify({
-                            title: this.editForm.title,
-                            useAI: false
-                        })
-                    });
-
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Ошибка сохранения титула');
-                    }
-
-                    this.users = this.users.map(u =>
-                        u.id === this.selectedUser.id
-                            ? {...u, title: data.newTitle}
-                            : u
-                    );
-                    this.filterUsers();
-                    this.showEditModal = false;
-                } catch (error) {
-                    this.error = error.message || 'Произошла ошибка при сохранении титула';
-                } finally {
-                    this.isLoading = false;
-                }
-            },
-
-            async openHistoryModal(userId) {
-                this.historyLoading = true;
-                this.history = [];
-                this.error = '';
-                this.showHistoryModal = true;
-
-                try {
-                    const response = await fetch(`/api/admin/title-history/${userId}`, {
-                        headers: {
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`
-                        }
-                    });
-
-                    const data = await response.json();
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Ошибка загрузки истории');
-                    }
-
-                    this.history = data;
-                } catch (error) {
-                    this.error = error.message || 'Произошла ошибка';
-                } finally {
-                    this.historyLoading = false;
-                }
-            },
-
-            formatDate(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('ru-RU', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-            }
-        }
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        gothic: ['"HelmswaldPost"', 'serif'],
+      }
     }
+  }
+}
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>
+@font-face {
+  font-family: 'HelmswaldPost';
+  src: url('/helmswald-post-font/HelmswaldPost-1r2M.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Groundage';
+  src: url('/groundage/Groundage-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+.gothic-font {
+  font-family: 'Groundage', serif;
+}
+.gothic-latin-font {
+  font-family: 'HelmswaldPost', serif;
+}
+.modern-font {
+  font-family: 'Inter', sans-serif;
+}
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+</style>
+</head>
+<body class="modern-font bg-white text-gray-800 min-h-screen">
+<div x-data="adminPanel()" x-init="init()" class="container mx-auto px-4 py-8">
+  <!-- Header -->
+  <div class="text-center mb-8 justify-center flex flex-col">
+    <img src="img/partyreich.png" class="mb-3 max-w-sm md:max-w-lg tracking-wide self-center">
+    <p class="text-2xl mt-5 gothic-font text-gray-700">
+      Админ-Панель Пати-Райха
+    </p>
+    <p class="text-2xl gothic-font text-gray-600 mt-2 tracking-wide">
+      Во славу Party Kaiser и Коньячных Рыцарей
+    </p>
+    <!-- Navigation -->
+    <div class="mt-6 gap-1 md:flex-row flex-col flex justify-center">
+      <a href="/"
+         class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
+        Главная
+      </a>
+      <a href="/profile"
+         class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
+        Профиль
+      </a>
+      <a href="/hall-of-fame"
+         class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
+        Зал Славы
+      </a>
+    </div>
+  </div>
+
+  <!-- Access Denied -->
+  <div x-show="!isAuthorized && !loading" class="max-w-4xl mx-auto bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden">
+    <div class="bg-gray-800 p-5">
+      <h2 class="gothic-latin-font text-4xl font-normal text-white text-center tracking-wide">
+        🚫 Доступ Запрещён
+      </h2>
+    </div>
+    <div class="p-6 text-center">
+      <p class="text-2xl gothic-font text-gray-800 mb-4">
+        Только Party Kaiser имеет доступ к этой панели.
+      </p>
+      <a href="/profile"
+         class="bg-gray-900 text-white px-6 py-3 rounded gothic-font tracking-wide hover:bg-black transition-colors">
+        Вернуться в Профиль
+      </a>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div x-show="loading" class="text-center py-12">
+    <div class="inline-flex items-center text-gray-800 text-2xl">
+      <svg class="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+        <path class="opacity-75" fill="currentColor"
+          d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Загрузка...
+    </div>
+  </div>
+
+  <!-- Admin Content -->
+  <div x-show="isAuthorized && !loading" class="space-y-8">
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div class="flex flex-col gap-2 items-center bg-gray-100 border border-gray-300 rounded p-4 text-center">
+        <img src="img/cup.png" class="max-w-8">
+        <div class="text-2xl font-bold gothic-font" x-text="users.length"></div>
+        <div class="text-gray-600 gothic-font">Всего</div>
+      </div>
+      <div class="flex flex-col gap-2 items-center bg-gray-100 border border-gray-300 rounded p-4 text-center">
+        <img src="img/candle.png" class="max-w-8">
+        <div class="text-2xl font-bold gothic-font" x-text="users.filter(u => u.oath_taken).length"></div>
+        <div class="text-gray-600 gothic-font">Подданных</div>
+      </div>
+      <div class="flex flex-col gap-2 items-center bg-gray-100 border border-gray-300 rounded p-4 text-center">
+        <img src="img/crown.png" class="max-w-8">
+        <div class="text-2xl font-bold gothic-font" x-text="users.filter(u => u.role === 'admin').length"></div>
+        <div class="text-gray-600 gothic-font">Админов</div>
+      </div>
+      <div class="flex flex-col gap-2 items-center bg-gray-100 border border-gray-300 rounded p-4 text-center">
+        <img src="img/scroll.png" class="max-w-8">
+        <div class="text-2xl font-bold gothic-font" x-text="users.filter(u => u.title).length"></div>
+        <div class="text-gray-600 gothic-font">Титулов</div>
+      </div>
+    </div>
+
+    <!-- Search & Filter -->
+    <div class="max-w-4xl mx-auto bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden">
+      <div class="p-5 space-y-4">
+        <input
+          x-model="searchTerm"
+          @input="filterUsers"
+          type="text"
+          placeholder="Поиск по имени, юзернейму или титулу..."
+          class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
+        >
+        <div class="flex flex-col sm:flex-row gap-3">
+          <select
+            x-model="filterRole"
+            @change="filterUsers"
+            class="flex-1 px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
+          >
+            <option value="all">Все роли</option>
+            <option value="admin">Администраторы</option>
+            <option value="user">Пользователи</option>
+          </select>
+          <div class="flex items-center text-xl gothic-font text-gray-700">
+            <span x-text="filteredUsers.length"></span> найдено
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Users Table -->
+    <div class="max-w-4xl mx-auto bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden">
+      <div class="bg-gray-800 p-5">
+        <h2 class="gothic-font text-3xl font-normal text-white text-center tracking-wide">
+          Управление Подданными
+        </h2>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-center">
+          <thead class="bg-gray-200">
+            <tr>
+              <th class="px-4 py-3 text-left text-gray-800 gothic-font">Пользователь</th>
+              <th class="px-4 py-3 text-left text-gray-800 gothic-font">Титул</th>
+              <th class="px-4 py-3 text-left text-gray-800 gothic-font">Роль</th>
+              <th class="px-4 py-3 text-left text-gray-800 gothic-font">Действия</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="user in filteredUsers" :key="user.id">
+              <tr class="border-t border-gray-300 hover:bg-gray-100">
+                <td class="px-4 py-3 text-left">
+                  <div class="font-semibold gothic-font" x-text="user.full_name"></div>
+                  <div class="text-gray-600" x-text="`@${user.username}`"></div>
+                  <div class="text-gray-500 text-sm" x-text="user.location || 'Неизвестные земли'"></div>
+                </td>
+                <td class="px-4 py-3 text-left gothic-font "
+                    x-text="user.title || 'Без титула'"></td>
+                <td class="px-4 py-3 text-left">
+                  <span x-text="user.role === 'admin' ? 'Админ' : 'Юзер'"
+                        class="px-2 py-1 text-xs rounded bg-gray-200 text-gray-700"></span>
+                </td>
+                <td class="px-4 py-3">
+                  <div class="flex flex-wrap gap-1">
+                    <button
+                      @click="openEditModal(user)"
+                      class="flex flex-1 justify-center bg-gray-900 text-white px-3 py-1.5 rounded gothic-font text-sm hover:bg-black transition-colors">
+                      Титул
+                    </button>
+                    <button
+                      @click="openPasswordModal(user)"
+                      class="flex flex-1 justify-center bg-blue-600 text-white px-3 py-1.5 rounded gothic-font text-sm hover:bg-blue-700 transition-colors">
+                      Пароль
+                    </button>
+                    <button
+                      @click="openHistoryModal(user.id)"
+                      class="flex flex-1 justify-center bg-gray-600 text-white px-3 py-1.5 rounded gothic-font text-sm hover:bg-gray-700 transition-colors">
+                      История
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Edit Title Modal -->
+  <div x-show="showEditModal" x-transition
+       class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+       @click="showEditModal = false">
+    <div class="bg-white border-2 border-gray-700 rounded p-6 max-w-2xl w-full shadow-xl" @click.stop>
+      <h3 class="gothic-font text-3xl text-gray-900 text-center mb-4">
+        ⚔️ Редактирование Титула
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-2xl font-medium text-gray-800 mb-2 gothic-font">
+            👤 Пользователь
+          </label>
+          <p class="text-xl gothic-font" x-text="selectedUser?.full_name"></p>
+          <p class="text-gray-600" x-text="`@${selectedUser?.username}`"></p>
+        </div>
+        <div>
+          <label class="block text-2xl font-medium text-gray-800 mb-2 gothic-font">
+            📜 Текущий титул
+          </label>
+          <p class="text-xl gothic-font" x-text="selectedUser?.title || 'Без титула'"></p>
+        </div>
+        <div>
+          <label class="block text-2xl font-medium text-gray-800 mb-2 gothic-font">
+            🏆 Новые достижения
+          </label>
+          <textarea
+            x-model="editForm.achievements"
+            rows="3"
+            placeholder="Опишите новые достижения..."
+            class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600 resize-none"
+          ></textarea>
+        </div>
+        <div>
+          <label class="block text-2xl font-medium text-gray-800 mb-2 gothic-font">
+            📖 Новые истории
+          </label>
+          <textarea
+            x-model="editForm.stories"
+            rows="3"
+            placeholder="Расскажите новые истории..."
+            class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600 resize-none"
+          ></textarea>
+        </div>
+        <div>
+          <label class="block text-2xl font-medium text-gray-800 mb-2 gothic-font">
+            👑 Новый титул
+          </label>
+          <input
+            x-model="editForm.title"
+            type="text"
+            placeholder="Введите новый титул..."
+            class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
+          >
+        </div>
+        <div class="flex items-center">
+          <input
+            x-model="editForm.useAI"
+            type="checkbox"
+            id="useAI"
+            class="h-5 w-5 text-gray-700 focus:ring-gray-600 border-gray-400 rounded"
+          >
+          <label for="useAI" class="ml-2 text-xl text-gray-800 gothic-font">
+            Использовать AI
+          </label>
+        </div>
+        <div x-show="error" class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded text-center text-xl">
+          <p x-text="error"></p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+          <button
+            @click="generateAITitle"
+            :disabled="isLoading || !editForm.useAI"
+            class="bg-purple-600 text-white px-5 py-2.5 rounded gothic-font text-2xl hover:bg-purple-700 transition-colors disabled:opacity-50"
+          >
+            <span x-show="!isLoading">🤖 Сгенерировать</span>
+            <span x-show="isLoading" class="flex items-center justify-center">
+              <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor"
+                  d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Генерация...
+            </span>
+          </button>
+          <button
+            @click="saveTitle"
+            :disabled="isLoading"
+            class="bg-gray-900 text-white px-5 py-2.5 rounded gothic-font text-2xl hover:bg-black transition-colors disabled:opacity-50"
+          >
+            💾 Сохранить
+          </button>
+          <button
+            @click="showEditModal = false"
+            class="bg-gray-600 text-white px-5 py-2.5 rounded gothic-font text-2xl hover:bg-gray-700 transition-colors"
+          >
+            Отмена
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Change Password Modal -->
+  <div x-show="showPasswordModal" x-transition
+       class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+       @click="showPasswordModal = false">
+    <div class="bg-white border-2 border-gray-700 rounded p-6 max-w-md w-full shadow-xl" @click.stop>
+      <h3 class="gothic-font text-3xl text-gray-900 text-center mb-4">
+        🔑 Смена Пароля
+      </h3>
+      <div class="space-y-4">
+        <div>
+          <label class="block text-2xl font-medium text-gray-800 mb-2 gothic-font">
+            👤 Пользователь
+          </label>
+          <p class="text-xl gothic-font" x-text="selectedUser?.full_name"></p>
+          <p class="text-gray-600" x-text="`@${selectedUser?.username}`"></p>
+        </div>
+        <div>
+          <label class="block text-2xl font-medium text-gray-800 mb-2 gothic-font">
+            🔒 Новый пароль
+          </label>
+          <input
+            x-model="passwordForm.newPassword"
+            type="password"
+            placeholder="Минимум 6 символов"
+            class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
+          >
+        </div>
+        <div>
+          <label class="block text-2xl font-medium text-gray-800 mb-2 gothic-font">
+            🔒 Подтвердите пароль
+          </label>
+          <input
+            x-model="passwordForm.confirmPassword"
+            type="password"
+            placeholder="Повторите пароль"
+            class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
+          >
+        </div>
+        <div x-show="passwordError" class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded text-center text-xl">
+          <p x-text="passwordError"></p>
+        </div>
+        <div x-show="passwordSuccess" class="bg-green-50 border border-green-300 text-green-700 px-4 py-3 rounded text-center text-xl">
+          <p x-text="passwordSuccess"></p>
+        </div>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+          <button
+            @click="changePassword"
+            :disabled="isLoading"
+            class="bg-blue-600 text-white px-5 py-2.5 rounded gothic-font text-2xl hover:bg-blue-700 transition-colors disabled:opacity-50"
+          >
+            <span x-show="!isLoading">💾 Сменить пароль</span>
+            <span x-show="isLoading" class="flex items-center justify-center">
+              <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+                <path class="opacity-75" fill="currentColor"
+                  d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              Сохранение...
+            </span>
+          </button>
+          <button
+            @click="showPasswordModal = false"
+            class="bg-gray-600 text-white px-5 py-2.5 rounded gothic-font text-2xl hover:bg-gray-700 transition-colors"
+          >
+            Отмена
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Title History Modal -->
+  <div x-show="showHistoryModal" x-transition
+       class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+       @click="showHistoryModal = false">
+    <div class="bg-white border-2 border-gray-700 rounded p-6 max-w-3xl w-full shadow-xl max-h-[80vh] overflow-y-auto" @click.stop>
+      <h3 class="gothic-font text-3xl text-gray-900 text-center mb-4">
+        История Титулов
+      </h3>
+      <div x-show="historyLoading" class="text-center py-6">
+        <div class="inline-flex items-center text-gray-800 text-2xl">
+          <svg class="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+            <path class="opacity-75" fill="currentColor"
+              d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+          </svg>
+          Загрузка...
+        </div>
+      </div>
+      <div x-show="!historyLoading && history.length === 0" class="text-center text-xl gothic-font text-gray-700 py-4">
+        <p>История отсутствует</p>
+      </div>
+      <div x-show="!historyLoading && history.length > 0" class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="bg-gray-100">
+            <tr>
+              <th class="px-3 py-2 text-left gothic-font">Дата</th>
+              <th class="px-3 py-2 text-left gothic-font">Старый</th>
+              <th class="px-3 py-2 text-left gothic-font">Новый</th>
+              <th class="px-3 py-2 text-left gothic-font hidden md:table-cell">Причина</th>
+              <th class="px-3 py-2 text-left gothic-font hidden md:table-cell">Кем</th>
+            </tr>
+          </thead>
+          <tbody>
+            <template x-for="entry in history" :key="entry.id">
+              <tr class="border-t border-gray-200">
+                <td class="px-3 py-2 text-gray-800" x-text="formatDate(entry.created_at)"></td>
+                <td class="px-3 py-2 text-gray-800 truncate max-w-xs"
+                    x-text="entry.old_title || 'Без титула'"></td>
+                <td class="px-3 py-2 text-gray-800 truncate max-w-xs"
+                    x-text="entry.new_title"></td>
+                <td class="px-3 py-2 text-gray-800 hidden md:table-cell"
+                    x-text="entry.reason"></td>
+                <td class="px-3 py-2 text-gray-800 hidden md:table-cell"
+                    x-text="entry.modified_by_username"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+      <div class="text-center mt-6">
+        <button
+          @click="showHistoryModal = false"
+          class="bg-gray-600 text-white px-5 py-2.5 rounded gothic-font text-2xl hover:bg-gray-700 transition-colors"
+        >
+          Закрыть
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Footer -->
+  <footer class="text-center text-gray-600 mt-12 pb-6 text-2xl">
+    <p class="gothic-font tracking-wide">
+      Во славу Коньячных Рыцарей и священного Коньячного Меча
+    </p>
+    <p class="mt-4 gothic-font">
+      Powered by Party Kaiser AI
+    </p>
+  </footer>
+</div>
+
+<script>
+function adminPanel() {
+  return {
+    users: [],
+    filteredUsers: [],
+    searchTerm: '',
+    filterRole: 'all',
+    isAuthorized: false,
+    loading: true,
+    isLoading: false,
+    error: '',
+    showEditModal: false,
+    showPasswordModal: false,
+    showHistoryModal: false,
+    selectedUser: null,
+    editForm: {
+      achievements: '',
+      stories: '',
+      title: '',
+      useAI: false
+    },
+    passwordForm: {
+      newPassword: '',
+      confirmPassword: ''
+    },
+    passwordError: '',
+    passwordSuccess: '',
+    history: [],
+    historyLoading: false,
+
+    async init() {
+      this.loading = true;
+      this.error = '';
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          this.isAuthorized = false;
+          this.loading = false;
+          return;
+        }
+        const response = await fetch('/api/admin/users', {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+        if (response.status === 403 || response.status === 401) {
+          this.isAuthorized = false;
+          this.loading = false;
+          return;
+        }
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Ошибка загрузки данных');
+        this.users = data;
+        this.filteredUsers = [...data];
+        this.isAuthorized = true;
+        this.filterUsers();
+      } catch (error) {
+        this.error = error.message || 'Произошла ошибка';
+        this.isAuthorized = false;
+      } finally {
+        this.loading = false;
+      }
+    },
+
+    filterUsers() {
+      const term = this.searchTerm.toLowerCase();
+      this.filteredUsers = this.users.filter(user => {
+        const matchesSearch =
+          user.full_name.toLowerCase().includes(term) ||
+          user.username.toLowerCase().includes(term) ||
+          (user.title && user.title.toLowerCase().includes(term));
+        const matchesRole = this.filterRole === 'all' || user.role === this.filterRole;
+        return matchesSearch && matchesRole;
+      });
+    },
+
+    openEditModal(user) {
+      this.selectedUser = user;
+      this.editForm = {
+        achievements: '',
+        stories: '',
+        title: user.title || '',
+        useAI: false
+      };
+      this.error = '';
+      this.showEditModal = true;
+    },
+
+    openPasswordModal(user) {
+      this.selectedUser = user;
+      this.passwordForm = { newPassword: '', confirmPassword: '' };
+      this.passwordError = '';
+      this.passwordSuccess = '';
+      this.showPasswordModal = true;
+    },
+
+    async changePassword() {
+      this.passwordError = '';
+      this.passwordSuccess = '';
+      if (!this.passwordForm.newPassword || this.passwordForm.newPassword.length < 6) {
+        this.passwordError = 'Пароль должен содержать минимум 6 символов';
+        return;
+      }
+      if (this.passwordForm.newPassword !== this.passwordForm.confirmPassword) {
+        this.passwordError = 'Пароли не совпадают';
+        return;
+      }
+
+      this.isLoading = true;
+      try {
+        const response = await fetch(`/api/admin/users/${this.selectedUser.id}/password`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ newPassword: this.passwordForm.newPassword })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Ошибка смены пароля');
+        this.passwordSuccess = 'Пароль успешно изменён!';
+        setTimeout(() => {
+          this.showPasswordModal = false;
+          this.passwordSuccess = '';
+        }, 2000);
+      } catch (error) {
+        this.passwordError = error.message || 'Произошла ошибка при смене пароля';
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async generateAITitle() {
+      if (!this.editForm.useAI || !this.selectedUser) return;
+      this.isLoading = true;
+      this.error = '';
+      try {
+        const response = await fetch(`/api/admin/users/${this.selectedUser.id}/title`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({
+            useAI: true,
+            achievements: this.editForm.achievements,
+            stories: this.editForm.stories
+          })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Ошибка генерации титула');
+        this.editForm.title = data.newTitle;
+      } catch (error) {
+        this.error = error.message || 'Произошла ошибка при генерации титула';
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async saveTitle() {
+      if (!this.selectedUser) return;
+      this.isLoading = true;
+      this.error = '';
+      try {
+        const response = await fetch(`/api/admin/users/${this.selectedUser.id}/title`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify({ title: this.editForm.title, useAI: false })
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Ошибка сохранения титула');
+        this.users = this.users.map(u => u.id === this.selectedUser.id ? {...u, title: data.newTitle} : u);
+        this.filterUsers();
+        this.showEditModal = false;
+      } catch (error) {
+        this.error = error.message || 'Произошла ошибка при сохранении титула';
+      } finally {
+        this.isLoading = false;
+      }
+    },
+
+    async openHistoryModal(userId) {
+      this.historyLoading = true;
+      this.history = [];
+      this.error = '';
+      this.showHistoryModal = true;
+      try {
+        const response = await fetch(`/api/admin/title-history/${userId}`, {
+          headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
+        });
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Ошибка загрузки истории');
+        this.history = data;
+      } catch (error) {
+        this.error = error.message || 'Произошла ошибка';
+      } finally {
+        this.historyLoading = false;
+      }
+    },
+
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ru-RU', {
+        year: 'numeric', month: 'short', day: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    }
+  }
+}
 </script>
 </body>
-
 </html>

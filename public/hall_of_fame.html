@@ -1,247 +1,278 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Зал Славы - Пати-Райх</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700&family=Inter:wght@300;400;500;600&display=swap');
-
-        .imperial-font { font-family: 'Cinzel', serif; }
-        .modern-font { font-family: 'Inter', sans-serif; }
-
-        .gradient-bg {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        }
-
-        .card-shadow {
-            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-        }
-
-        .royal-border {
-            border: 3px solid;
-            border-image: linear-gradient(45deg, #ffd700, #ffed4e, #ffd700) 1;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Зал Славы — Пати-Райх</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      fontFamily: {
+        gothic: ['"HelmswaldPost"', 'serif'],
+      }
+    }
+  }
+}
+</script>
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+<style>
+@font-face {
+  font-family: 'HelmswaldPost';
+  src: url('/helmswald-post-font/HelmswaldPost-1r2M.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Groundage';
+  src: url('/groundage/Groundage-Regular.ttf') format('truetype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+.gothic-font {
+  font-family: 'Groundage', serif;
+}
+.gothic-latin-font {
+  font-family: 'HelmswaldPost', serif;
+}
+.modern-font {
+  font-family: 'Inter', sans-serif;
+}
+.card-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+</style>
 </head>
-<body class="modern-font gradient-bg min-h-screen">
+<body class="modern-font bg-white text-gray-800 min-h-screen">
 <div x-data="hallOfFame()" x-init="loadUsers()" class="container mx-auto px-4 py-8">
-    <!-- Header -->
-    <div class="text-center mb-8">
-        <h1 class="imperial-font text-5xl font-bold text-white mb-4 drop-shadow-lg">
-            🏆 ЗАЛ СЛАВЫ 🏆
-        </h1>
-        <p class="text-xl text-white/90 imperial-font">
-            Почетные Подданные Пати-Райха
-        </p>
-        <p class="text-lg text-white/80 mt-2">
-            Во славу Party Kaiser и священного братства
-        </p>
+  <!-- Header -->
+  <div class="text-center mb-8 justify-center flex flex-col">
+    <img src="img/partyreich.png" class="mb-3 max-w-sm md:max-w-lg tracking-wide self-center">
+    <p class="text-2xl mt-5 gothic-font text-gray-700">
+      Зал Славы
+    </p>
+    <p class="text-2xl gothic-font text-gray-600 mt-2 tracking-wide">
+      Во славу Party Kaiser и Коньячных Рыцарей
+    </p>
 
-        <!-- Navigation -->
-        <div class="mt-6 space-x-4">
-            <a href="/" class="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-colors">
-                🏰 Главная
-            </a>
-            <a href="/profile" class="bg-white/20 text-white px-4 py-2 rounded-lg hover:bg-white/30 transition-colors">
-                👤 Профиль
-            </a>
-        </div>
+    <!-- Navigation -->
+    <div class="mt-6 gap-1 md:flex-row flex-col flex justify-center">
+      <a href="/"
+         class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
+        Главная
+      </a>
+      <a href="/profile"
+         class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
+        Профиль
+      </a>
+      <a x-show="user && user.role === 'admin'" href="/admin"
+         class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
+        Админ-панель
+      </a>
+    </div>
+  </div>
+
+  <!-- Search & Stats Panel -->
+  <div class="max-w-4xl mx-auto mb-8 bg-gray-50 border border-gray-300 rounded shadow-md p-6">
+    <div class="flex flex-col md:flex-row gap-4 items-center">
+      <div class="flex-1">
+        <label class="flex flex-row gap-2 align-center text-2xl font-medium text-gray-800 mb-2 gothic-font">
+          <img src="img/feather.png" class="max-w-8">
+            Поиск подданных
+        </label>
+        <input
+          x-model="searchTerm"
+          @input="filterUsers"
+          type="text"
+          placeholder="Имя, титул или место..."
+          class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
+        >
+      </div>
+      <div class="w-full md:w-auto">
+        <label class="flex flex-row gap-2 align-center text-2xl font-medium text-gray-800 mb-2 gothic-font">
+          <img src="img/book.png" class="max-w-8">
+            Сортировка
+        </label>
+        <select
+          x-model="sortBy"
+          @change="sortUsers"
+          class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
+        >
+          <option value="newest">Новейшие</option>
+          <option value="oldest">Старейшие</option>
+          <option value="name">По имени</option>
+        </select>
+      </div>
     </div>
 
-    <!-- Search and Filter -->
-    <div class="max-w-4xl mx-auto mb-8 bg-white rounded-2xl card-shadow p-6">
-        <div class="flex flex-col md:flex-row gap-4 items-center">
-            <div class="flex-1">
-                <input
-                        x-model="searchTerm"
-                        @input="filterUsers"
-                        type="text"
-                        placeholder="Поиск по имени или титулу..."
-                        class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors"
-                >
+    <!-- Stats summary -->
+    <div class="mt-5 text-center text-lg gothic-font text-gray-700">
+      <span x-text="`${filteredUsers.length} из ${users.length} подданных`"></span>
+    </div>
+  </div>
+
+  <!-- Loading -->
+  <div x-show="loading" class="text-center py-12">
+    <div class="inline-flex items-center text-gray-700 text-xl">
+      <svg class="animate-spin h-6 w-6 mr-3" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
+        <path class="opacity-75" fill="currentColor"
+          d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      Погружение в свитки Зала Славы...
+    </div>
+  </div>
+
+  <!-- Error -->
+  <div x-show="error" x-transition
+       class="max-w-4xl mx-auto mt-6 bg-red-50 border border-red-300 text-red-700 px-5 py-3 rounded text-center text-xl gothic-font">
+    <p x-text="error"></p>
+  </div>
+
+  <!-- Empty state -->
+  <div x-show="!loading && filteredUsers.length === 0 && !error" class="text-center py-12">
+    <div class="mb-4"><img src="img/throne.png" class="max-w-xl"></div>
+    <h2 class="gothic-font text-3xl text-gray-800 mb-4">Зал Славы пуст</h2>
+    <p class="text-xl gothic-font text-gray-700 mb-6">Пока ни один подданный не принёс клятву верности</p>
+    <a href="/"
+       class="bg-gray-900 text-white text-2xl px-6 py-3 rounded gothic-font tracking-wide hover:bg-black transition-colors">
+      Стать Первым Подданным
+    </a>
+  </div>
+
+  <!-- Users Grid -->
+  <div x-show="!loading && filteredUsers.length > 0" class="max-w-4xl mx-auto">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <template x-for="user in filteredUsers" :key="user.id">
+        <div class="bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden card-shadow">
+          <div class="bg-gray-800 p-4 text-white">
+            <h3 class="gothic-font text-xl font-normal text-center" x-text="user.full_name"></h3>
+            <p class="text-center text-gray-300 text-sm" x-text="`@${user.username}`"></p>
+            <p class="text-center text-gray-300 text-sm mt-1" x-text="user.location || 'Неизвестные земли'"></p>
+          </div>
+          <div class="p-5">
+            <div class="bg-white border-2 border-gray-600 rounded p-4 mb-4">
+              <h4 class="gothic-font text-3xl text-gray-900 mb-2 text-center justify-center">Титул</h4>
+              <p class="text-lg text-gray-800 text-center leading-relaxed gothic-font" x-text="user.title"></p>
             </div>
-            <div class="flex items-center space-x-4">
-                <select
-                        x-model="sortBy"
-                        @change="sortUsers"
-                        class="px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-purple-500 focus:outline-none transition-colors"
-                >
-                    <option value="newest">Новейшие</option>
-                    <option value="oldest">Старейшие</option>
-                    <option value="name">По имени</option>
-                </select>
-                <span class="text-gray-600 font-semibold" x-text="`${filteredUsers.length} подданных`"></span>
+            <div class="text-center text-gray-600 gothic-font text-base">
+              Подданный с <span x-text="formatDate(user.created_at)"></span>
             </div>
+          </div>
         </div>
+      </template>
     </div>
+  </div>
 
-    <!-- Loading -->
-    <div x-show="loading" class="text-center py-12">
-        <div class="inline-flex items-center text-white text-xl">
-            <svg class="animate-spin h-8 w-8 mr-3" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                <path class="opacity-75" fill="currentColor" d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-            </svg>
-            Загрузка Зала Славы...
-        </div>
+  <!-- Statistics Summary (below grid) -->
+  <div x-show="!loading && users.length > 0" class="max-w-4xl mx-auto mt-12 bg-gray-50 border border-gray-300 rounded shadow-md p-6">
+    <h2 class="flex flex-row gap-2 align-center justify-center gothic-font text-3xl font-normal text-gray-900 text-center mb-5 tracking-wide self-center">
+      <img src="img/cheese.png" class="max-w-8">
+        Статистика Пати-Райха
+    </h2>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+      <div class=" flex flex-col gap-2 align-center justify-center bg-gray-100 p-4 rounded">
+        <img src="img/cup.png" class="max-w-8 self-center">
+        <div class="text-2xl font-bold gothic-font text-gray-800" x-text="users.length"></div>
+        <div class="text-gray-700 gothic-font">Всего Подданных</div>
+      </div>
+      <div class="flex flex-col gap-2 align-center justify-center bg-gray-100 p-4 rounded">
+        <img src="img/trumpet.png" class="max-w-8 self-center">
+        <div class="text-2xl font-bold gothic-font text-gray-800" x-text="users.length"></div>
+        <div class="text-gray-700 gothic-font">Титулов Даровано</div>
+      </div>
+      <div class="flex flex-col gap-2 align-center justify-center bg-gray-100 p-4 rounded">
+        <img src="img/swords.png" class="max-w-8 self-center">
+        <div class="text-2xl font-bold gothic-font text-gray-800" x-text="users.length"></div>
+        <div class="text-gray-700 gothic-font">Клятв Принесено</div>
+      </div>
     </div>
+  </div>
 
-    <!-- Error Message -->
-    <div x-show="error" class="max-w-4xl mx-auto mb-8 bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg">
-        <p x-text="error" class="text-center font-semibold"></p>
-    </div>
-
-    <!-- Users Grid -->
-    <div x-show="!loading && filteredUsers.length > 0" class="max-w-6xl mx-auto">
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <template x-for="user in filteredUsers" :key="user.id">
-                <div class="bg-white rounded-2xl card-shadow overflow-hidden transform hover:scale-105 transition-all duration-200">
-                    <!-- User Header -->
-                    <div class="bg-gradient-to-r from-purple-600 to-indigo-600 p-4 text-white">
-                        <h3 class="imperial-font text-xl font-bold text-center" x-text="user.full_name"></h3>
-                        <p class="text-center text-purple-200" x-text="`@${user.username}`"></p>
-                        <p class="text-center text-sm text-purple-200 mt-1" x-text="user.location || 'Неизвестные земли'"></p>
-                    </div>
-
-                    <!-- Title Display -->
-                    <div class="p-6">
-                        <div class="bg-yellow-50 rounded-lg p-4 mb-4 royal-border">
-                            <h4 class="imperial-font text-lg font-semibold text-purple-800 mb-2 text-center">
-                                👑 Титул
-                            </h4>
-                            <p class="text-gray-800 text-center leading-relaxed" x-text="user.title"></p>
-                        </div>
-
-                        <div class="text-center text-sm text-gray-500">
-                            <p>Подданный с <span x-text="formatDate(user.created_at)"></span></p>
-                        </div>
-                    </div>
-
-                    <!-- Crown Animation -->
-                    <div class="absolute top-2 right-2 text-2xl animate-pulse">
-                        👑
-                    </div>
-                </div>
-            </template>
-        </div>
-    </div>
-
-    <!-- No Results -->
-    <div x-show="!loading && filteredUsers.length === 0 && !error" class="text-center py-12">
-        <div class="text-6xl mb-4">🏰</div>
-        <h2 class="imperial-font text-3xl text-white mb-4">Зал Славы Пуст</h2>
-        <p class="text-xl text-white/80 mb-6">Пока что ни один подданный не принёс клятву верности</p>
-        <a href="/" class="bg-white text-purple-600 px-6 py-3 rounded-lg font-bold text-lg hover:bg-gray-100 transition-colors">
-            Стать Первым Подданным
-        </a>
-    </div>
-
-    <!-- Statistics -->
-    <div x-show="!loading && users.length > 0" class="max-w-4xl mx-auto mt-12 bg-white/10 backdrop-blur-sm rounded-2xl p-8">
-        <h2 class="imperial-font text-3xl font-bold text-white text-center mb-6">
-            📊 Статистика Пати-Райха
-        </h2>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-            <div class="bg-white/20 rounded-xl p-6">
-                <div class="text-4xl mb-2">👥</div>
-                <div class="text-3xl font-bold text-white" x-text="users.length"></div>
-                <div class="text-white/80">Всего Подданных</div>
-            </div>
-            <div class="bg-white/20 rounded-xl p-6">
-                <div class="text-4xl mb-2">🏆</div>
-                <div class="text-3xl font-bold text-white" x-text="users.length"></div>
-                <div class="text-white/80">Титулов Даровано</div>
-            </div>
-            <div class="bg-white/20 rounded-xl p-6">
-                <div class="text-4xl mb-2">⚔️</div>
-                <div class="text-3xl font-bold text-white" x-text="users.length"></div>
-                <div class="text-white/80">Клятв Принесено</div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Footer -->
-    <footer class="text-center text-white/80 mt-12">
-        <p class="text-lg imperial-font">
-            🍾 Во славу всех благородных подданных Пати-Райха 🍾
-        </p>
-        <p class="text-sm mt-2">
-            Да здравствует Party Kaiser и священное братство!
-        </p>
-    </footer>
+  <!-- Footer -->
+  <footer class="text-center text-gray-600 mt-12 pb-6 text-2xl">
+    <p class="gothic-font tracking-wide">
+      Во славу Коньячных Рыцарей и священного Коньячного Меча
+    </p>
+    <p class="mt-4 gothic-font">
+      Powered by Party Kaiser AI
+    </p>
+  </footer>
 </div>
 
 <script>
-    function hallOfFame() {
-        return {
-            users: [],
-            filteredUsers: [],
-            searchTerm: '',
-            sortBy: 'newest',
-            loading: false,
-            error: '',
+function hallOfFame() {
+  return {
+    users: [],
+    filteredUsers: [],
+    searchTerm: '',
+    sortBy: 'newest',
+    loading: false,
+    error: '',
+    user: null,
 
-            async loadUsers() {
-                this.loading = true;
-                this.error = '';
+    init() {
+      const storedUser = localStorage.getItem('user');
+      if (storedUser) {
+        this.user = JSON.parse(storedUser);
+      }
+    },
 
-                try {
-                    const response = await fetch('/api/hall-of-fame');
-                    const data = await response.json();
+    async loadUsers() {
+      this.loading = true;
+      this.error = '';
+      try {
+        const response = await fetch('/api/hall-of-fame');
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Ошибка загрузки подданных');
+        this.users = data;
+        this.filteredUsers = [...data];
+        this.sortUsers();
+      } catch (err) {
+        this.error = err.message || 'Неожиданная ошибка при загрузке';
+      } finally {
+        this.loading = false;
+      }
+    },
 
-                    if (!response.ok) {
-                        throw new Error(data.error || 'Ошибка загрузки пользователей');
-                    }
+    filterUsers() {
+      const term = this.searchTerm.toLowerCase().trim();
+      this.filteredUsers = this.users.filter(user =>
+        (user.full_name && user.full_name.toLowerCase().includes(term)) ||
+        (user.username && user.username.toLowerCase().includes(term)) ||
+        (user.title && user.title.toLowerCase().includes(term)) ||
+        (user.location && user.location.toLowerCase().includes(term))
+      );
+      this.sortUsers();
+    },
 
-                    this.users = data;
-                    this.filteredUsers = [...data];
-                    this.sortUsers();
+    sortUsers() {
+      switch (this.sortBy) {
+        case 'newest':
+          this.filteredUsers.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          break;
+        case 'oldest':
+          this.filteredUsers.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+          break;
+        case 'name':
+          this.filteredUsers.sort((a, b) => a.full_name.localeCompare(b.full_name));
+          break;
+      }
+    },
 
-                } catch (error) {
-                    this.error = error.message || 'Произошла неожиданная ошибка';
-                } finally {
-                    this.loading = false;
-                }
-            },
-
-            filterUsers() {
-                const term = this.searchTerm.toLowerCase();
-                this.filteredUsers = this.users.filter(user =>
-                    user.full_name.toLowerCase().includes(term) ||
-                    user.username.toLowerCase().includes(term) ||
-                    user.title.toLowerCase().includes(term) ||
-                    (user.location && user.location.toLowerCase().includes(term))
-                );
-                this.sortUsers();
-            },
-
-            sortUsers() {
-                switch (this.sortBy) {
-                    case 'newest':
-                        this.filteredUsers.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-                        break;
-                    case 'oldest':
-                        this.filteredUsers.sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-                        break;
-                    case 'name':
-                        this.filteredUsers.sort((a, b) => a.full_name.localeCompare(b.full_name));
-                        break;
-                }
-            },
-
-            formatDate(dateString) {
-                const date = new Date(dateString);
-                return date.toLocaleDateString('ru-RU', {
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                });
-            }
-        }
+    formatDate(dateString) {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('ru-RU', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
     }
+  }
+}
 </script>
 </body>
 </html>
