@@ -362,6 +362,35 @@ app.post('/api/expand-title', authenticateToken, async (req, res) => {
     }
 });
 
+app.put('/api/admin/users/:id/password', authenticateToken, requireAdmin, async (req, res) => {
+    try {
+        const { newPassword } = req.body;
+        const userId = req.params.id;
+
+        if (!newPassword || newPassword.length < 6) {
+            return res.status(400).json({ error: 'Пароль должен содержать минимум 6 символов' });
+        }
+
+        // Hash new password
+        const passwordHash = await bcrypt.hash(newPassword, 10);
+
+        // Update password
+        db.run(
+            'UPDATE users SET password_hash = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+            [passwordHash, userId],
+            (err) => {
+                if (err) {
+                    return res.status(500).json({ error: 'Database error' });
+                }
+                res.json({ success: true, message: 'Пароль успешно изменён' });
+            }
+        );
+    } catch (error) {
+        console.error('Admin password update error:', error);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
+});
+
 // Hall of Fame
 app.get('/api/hall-of-fame', (req, res) => {
     db.all(
