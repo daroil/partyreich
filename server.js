@@ -246,7 +246,7 @@ app.post('/generate-title', async (req, res) => {
                     content: userPrompt
                 }
             ],
-            max_tokens: 20000,
+            max_tokens: 8000,
             temperature: 0.8
         });
 
@@ -323,12 +323,12 @@ app.post('/api/expand-title', authenticateToken, async (req, res) => {
 
             try {
                 const completion = await openai.chat.completions.create({
-                    model: "gpt-4.1",
+                    model: "deepseek-chat",
                     messages: [
                         { role: "system", content: SYSTEM_PROMPT },
                         { role: "user", content: userPrompt }
                     ],
-                    max_tokens: 25000,
+                    max_tokens: 8000,
                     temperature: 0.8
                 });
 
@@ -447,7 +447,7 @@ app.put('/api/admin/users/:id/title', authenticateToken, requireAdmin, async (re
             if (stories) userPrompt += `\nИстории: ${stories}`;
 
             const completion = await openai.chat.completions.create({
-                model: "gpt-4.1",
+                model: "deepseek-chat",
                 messages: [
                     { role: "system", content: SYSTEM_PROMPT },
                     { role: "user", content: userPrompt }

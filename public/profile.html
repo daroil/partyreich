@@ -1,256 +1,230 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Профиль — Пати-Райх</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          fontFamily: {
-            gothic: ['"HelmswaldPost"', 'serif'],
-          }
-        }
-      }
-    }
-  </script>
-  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-  <style>
-    @font-face {
-      font-family: 'HelmswaldPost';
-      src: url('/helmswald-post-font/HelmswaldPost-1r2M.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
-    }
-    @font-face {
-      font-family: 'Groundage';
-      src: url('/groundage/Groundage-Regular.ttf') format('truetype');
-      font-weight: normal;
-      font-style: normal;
-      font-display: swap;
-    }
-    .gothic-font {
-      font-family: 'Groundage', serif;
-    }
-    .gothic-latin-font {
-      font-family: 'HelmswaldPost', serif;
-    }
-    .modern-font {
-      font-family: 'Inter', sans-serif;
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Профиль — Пати-Райх</title>
+    <link rel="stylesheet" href="/css/output.css">
+    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
 </head>
 <body class="modern-font bg-white text-gray-800 min-h-screen">
-  <div x-data="profileManager()" x-init="init()" class="container mx-auto px-4 py-8">
+<div x-data="profileManager()" x-init="init()" class="container mx-auto px-4 py-8">
     <!-- Header -->
     <div class="text-center mb-8 justify-center flex flex-col">
-      <img src="img/partyreich.png" class="mb-3 max-w-sm md:max-w-lg tracking-wide self-center">
-      <p class="text-2xl mt-5 gothic-font text-gray-700">
-        Профиль Подданного Пати-Райха
-      </p>
-      <p class="text-2xl gothic-font text-gray-600 mt-2 tracking-wide">
-        Во славу Party Kaiser и Коньячных Рыцарей
-      </p>
+        <img src="img/partyreich.png" class="mb-3 max-w-sm md:max-w-lg tracking-wide self-center">
+        <p class="text-2xl mt-5 gothic-font text-gray-700">
+            Профиль Подданного Пати-Райха
+        </p>
+        <p class="text-2xl gothic-font text-gray-600 mt-2 tracking-wide">
+            Во славу Party Kaiser и Коньячных Рыцарей
+        </p>
 
-      <!-- Navigation -->
-      <div class="mt-6 gap-1 md:flex-row flex-col flex justify-center">
-        <a href="/" class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
-          Главная
-        </a>
-        <a href="/hall-of-fame" class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
-          Зал Славы
-        </a>
-        <a x-show="profile?.role === 'admin'" href="/admin" class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
-          Админ-панель
-        </a>
-        <button @click="logout" class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
-          Выйти
-        </button>
-      </div>
+        <!-- Navigation -->
+        <div class="mt-6 gap-1 md:flex-row flex-col flex justify-center">
+            <a href="/"
+               class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
+                Главная
+            </a>
+            <a href="/hall-of-fame"
+               class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
+                Зал Славы
+            </a>
+            <a x-show="profile?.role === 'admin'" href="/admin"
+               class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
+                Админ-панель
+            </a>
+            <button @click="logout"
+                    class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors text-2xl gothic-font">
+                Выйти
+            </button>
+        </div>
     </div>
 
     <!-- Login Form (if not authenticated) -->
     <div x-show="!isAuthenticated && !loading"
          class="max-w-4xl mx-auto bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden">
-      <div class="bg-gray-800 p-5">
-        <h2 class="gothic-font text-4xl font-normal text-white text-center tracking-wide">
-          Вход в Аккаунт
-        </h2>
-      </div>
-      <form @submit.prevent="login" class="p-6 space-y-5">
-        <div>
-          <label class="flex flex-row gap-2 items-center text-2xl font-medium text-gray-800 mb-2 gothic-font">
-            <img src="img/crown.png" class="max-w-8">
-            Имя пользователя *
-          </label>
-          <input
-            x-model="loginData.username"
-            type="text"
-            required
-            placeholder="Введите имя пользователя..."
-            class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
-          >
+        <div class="bg-gray-800 p-5">
+            <h2 class="gothic-font text-4xl font-normal text-white text-center tracking-wide">
+                Вход в Аккаунт
+            </h2>
         </div>
-        <div>
-          <label class="flex flex-row gap-2 items-center text-2xl font-medium text-gray-800 mb-2 gothic-font">
-            <img src="img/shield.png" class="max-w-8">
-            Пароль *
-          </label>
-          <input
-            x-model="loginData.password"
-            type="password"
-            required
-            placeholder="Введите пароль..."
-            class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
-          >
-        </div>
-        <div class="text-center pt-4">
-          <button
-            type="submit"
-            :disabled="isLoggingIn"
-            class="bg-gray-900 text-white text-2xl px-6 py-3 rounded gothic-font tracking-wide hover:bg-black transition-colors disabled:opacity-50"
-          >
-            <span x-show="!isLoggingIn">Войти в Аккаунт</span>
-            <span x-show="isLoggingIn" class="flex items-center justify-center">
+        <form @submit.prevent="login" class="p-6 space-y-5">
+            <div>
+                <label class="label-with-icon gothic-font">
+                    <img src="img/crown.png" class="max-w-8">
+                    Имя пользователя *
+                </label>
+                <input
+                        x-model="loginData.username"
+                        type="text"
+                        required
+                        placeholder="Введите имя пользователя..."
+                        class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
+                >
+            </div>
+            <div>
+                <label class="label-with-icon gothic-font">
+                    <img src="img/shield.png" class="max-w-8">
+                    Пароль *
+                </label>
+                <input
+                        x-model="loginData.password"
+                        type="password"
+                        required
+                        placeholder="Введите пароль..."
+                        class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600"
+                >
+            </div>
+            <div class="text-center pt-4">
+                <button
+                        type="submit"
+                        :disabled="isLoggingIn"
+                        class="bg-gray-900 text-white text-2xl px-6 py-3 rounded gothic-font tracking-wide hover:bg-black transition-colors disabled:opacity-50"
+                >
+                    <span x-show="!isLoggingIn">Войти в Аккаунт</span>
+                    <span x-show="isLoggingIn" class="flex items-center justify-center">
               <svg class="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
-                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+                        fill="none"></circle>
+                <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
               </svg>
               Вход...
             </span>
-          </button>
-        </div>
-      </form>
+                </button>
+            </div>
+        </form>
     </div>
 
     <!-- Loading Spinner -->
     <div x-show="loading" class="text-center py-12 text-2xl gothic-font text-gray-700">
-      <div class="inline-flex flex-col items-center">
-        <svg class="animate-spin h-8 w-8 mr-3 text-gray-700" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-        </svg>
-        <span class="mt-2">Загрузка профиля...</span>
-      </div>
+        <div class="inline-flex flex-col items-center">
+            <svg class="animate-spin h-8 w-8 mr-3 text-gray-700" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+                        fill="none"></circle>
+                <path class="opacity-75" fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span class="mt-2">Загрузка профиля...</span>
+        </div>
     </div>
 
     <!-- Profile Content -->
     <div x-show="isAuthenticated && !loading" class="space-y-8">
 
-      <!-- User Info & Current Title -->
-      <div class="max-w-4xl mx-auto bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden">
-        <div class="bg-gray-800 p-5">
-          <h2 class="gothic-font text-4xl font-normal text-white text-center tracking-wide">
-            Информация о Подданном
-          </h2>
-        </div>
-        <div class="p-6">
-          <div class="bg-white border border-gray-600 rounded p-5 mb-6">
-            <h3 class="gothic-font text-3xl text-center text-gray-900 mb-3">
-              Императорский Титул
-            </h3>
-            <p x-text="profile?.title || 'Титул отсутствует'"
-               class="text-2xl text-gray-800 text-center leading-relaxed font-medium gothic-font mb-4"></p>
-
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-4">
-              <div>
-                <p class="text-sm text-gray-500 gothic-font">Имя</p>
-                <p x-text="profile?.full_name" class="font-medium text-xl gothic-font"></p>
-              </div>
-              <div>
-                <p class="text-sm text-gray-500 gothic-font">Место</p>
-                <p x-text="profile?.location || '—'" class="font-medium text-xl gothic-font"></p>
-              </div>
-              <div>
-                <p class="text-sm text-gray-500 gothic-font">С</p>
-                <p x-text="formatDate(profile?.created_at)" class="font-medium text-xl gothic-font"></p>
-              </div>
+        <!-- User Info & Current Title -->
+        <div class="max-w-4xl mx-auto bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden">
+            <div class="bg-gray-800 p-5">
+                <h2 class="gothic-font text-4xl font-normal text-white text-center tracking-wide">
+                    Информация о Подданном
+                </h2>
             </div>
-          </div>
-        </div>
-      </div>
+            <div class="p-6">
+                <div class="bg-white border border-gray-600 rounded p-5 mb-6">
+                    <h3 class="gothic-font text-3xl text-center text-gray-900 mb-3">
+                        Императорский Титул
+                    </h3>
+                    <p x-text="profile?.title || 'Титул отсутствует'"
+                       class="text-2xl text-gray-800 text-center leading-relaxed font-medium gothic-font mb-4"></p>
 
-      <!-- Title Expansion -->
-      <div x-show="isAuthenticated && !loading"
-           class="max-w-4xl mx-auto bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden">
-        <div class="bg-gray-800 p-5">
-          <h2 class="gothic-font text-4xl font-normal text-white text-center tracking-wide">
-            Расширение Титула
-          </h2>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center mt-4">
+                        <div>
+                            <p class="text-sm text-gray-500 gothic-font">Имя</p>
+                            <p x-text="profile?.full_name" class="font-medium text-xl gothic-font"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 gothic-font">Место</p>
+                            <p x-text="profile?.location || '—'" class="font-medium text-xl gothic-font"></p>
+                        </div>
+                        <div>
+                            <p class="text-sm text-gray-500 gothic-font">С</p>
+                            <p x-text="formatDate(profile?.created_at)" class="font-medium text-xl gothic-font"></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-        <form @submit.prevent="expandTitle" class="p-6 space-y-5">
-          <div>
-            <label class="flex flex-row gap-2 items-center text-2xl font-medium text-gray-800 mb-2 gothic-font">
-              <img src="img/target.png" class="max-w-8">
-              Новые достижения *
-            </label>
-            <textarea
-              x-model="expansionData.achievements"
-              required
-              rows="3"
-              placeholder="Опишите новые достижения, победы, умения..."
-              class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600 resize-none"
-            ></textarea>
-          </div>
-          <div>
-            <label class="flex flex-row gap-2 items-center text-2xl font-medium text-gray-800 mb-2 gothic-font">
-              <img src="img/ship.png" class="max-w-8">
-              Новые истории и легенды
-            </label>
-            <textarea
-              x-model="expansionData.stories"
-              rows="3"
-              placeholder="Расскажите новые приключения и памятные моменты..."
-              class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600 resize-none"
-            ></textarea>
-          </div>
-          <div class="text-center pt-4">
-            <button
-              type="submit"
-              :disabled="isExpanding"
-              class="bg-gray-900 text-white text-2xl px-6 py-3 rounded gothic-font tracking-wide hover:bg-black transition-colors disabled:opacity-50"
-            >
-              <span x-show="!isExpanding">Расширить Титул</span>
-              <span x-show="isExpanding" class="flex items-center justify-center">
+
+        <!-- Title Expansion -->
+        <div x-show="isAuthenticated && !loading"
+             class="max-w-4xl mx-auto bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden">
+            <div class="bg-gray-800 p-5">
+                <h2 class="gothic-font text-4xl font-normal text-white text-center tracking-wide">
+                    Расширение Титула
+                </h2>
+            </div>
+            <form @submit.prevent="expandTitle" class="p-6 space-y-5">
+                <div>
+                    <label class="label-with-icon gothic-font">
+                        <img src="img/target.png" class="img-icon">
+                        Новые достижения *
+                    </label>
+                    <textarea
+                            x-model="expansionData.achievements"
+                            required
+                            rows="3"
+                            placeholder="Опишите новые достижения, победы, умения..."
+                            class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600 resize-none"
+                    ></textarea>
+                </div>
+                <div>
+                    <label class="label-with-icon gothic-font">
+                        <img src="img/ship.png" class="img-icon">
+                        Новые истории и легенды
+                    </label>
+                    <textarea
+                            x-model="expansionData.stories"
+                            rows="3"
+                            placeholder="Расскажите новые приключения и памятные моменты..."
+                            class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600 resize-none"
+                    ></textarea>
+                </div>
+                <div class="text-center pt-4">
+                    <button
+                            type="submit"
+                            :disabled="isExpanding"
+                            class="bg-gray-900 text-white text-2xl px-6 py-3 rounded gothic-font tracking-wide hover:bg-black transition-colors disabled:opacity-50"
+                    >
+                        <span x-show="!isExpanding">Расширить Титул</span>
+                        <span x-show="isExpanding" class="flex items-center justify-center">
                 <svg class="animate-spin h-5 w-5 mr-2 text-white" viewBox="0 0 24 24">
-                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" fill="none"></circle>
-                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+                          fill="none"></circle>
+                  <path class="opacity-75" fill="currentColor"
+                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
                 Обработка...
               </span>
-            </button>
-          </div>
-        </form>
-      </div>
+                    </button>
+                </div>
+            </form>
+        </div>
 
-      <!-- Achievements & Stories -->
-      <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-        <!-- Achievements -->
-        <div class="bg-gray-50 border border-gray-300 rounded shadow-md p-6">
-          <h3 class="flex flex-row gap-2 align-center gothic-font text-2xl text-center text-gray-900 mb-3 justify-center">
-            <img src="img/goblet.png" class="max-w-8">
-              Достижения
-          </h3>
-          <div class="bg-white border border-gray-600 rounded p-4 min-h-32">
-            <p class="text-gray-800 text-lg whitespace-pre-wrap gothic-font"
-               x-text="profile?.achievements || 'Нет записанных достижений'"></p>
-          </div>
+        <!-- Achievements & Stories -->
+        <div class="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Achievements -->
+            <div class="bg-gray-50 border border-gray-300 rounded shadow-md p-6">
+                <h3 class="label-with-icon justify-center gothic-font">
+                    <img src="img/goblet.png" class="img-icon">
+                    Достижения
+                </h3>
+                <div class="bg-white border border-gray-600 rounded p-4 min-h-32">
+                    <p class="text-gray-800 text-lg whitespace-pre-wrap gothic-font"
+                       x-text="profile?.achievements || 'Нет записанных достижений'"></p>
+                </div>
+            </div>
+            <!-- Stories -->
+            <div class="bg-gray-50 border border-gray-300 rounded shadow-md p-6">
+                <h3 class="label-with-icon justify-center gothic-font">
+                    <img src="img/scroll.png" class="img-icon">
+                    Истории и Легенды
+                </h3>
+                <div class="bg-white border border-gray-600 rounded p-4 min-h-32">
+                    <p class="text-gray-800 text-lg whitespace-pre-wrap gothic-font"
+                       x-text="profile?.stories || 'Нет записанных историй'"></p>
+                </div>
+            </div>
         </div>
-        <!-- Stories -->
-        <div class="bg-gray-50 border border-gray-300 rounded shadow-md p-6">
-          <h3 class="flex flex-row gap-2 align-center justify-center gothic-font text-2xl text-center text-gray-900 mb-3">
-            <img src="img/scroll.png" class="max-w-8">
-              Истории и Легенды
-          </h3>
-          <div class="bg-white border border-gray-600 rounded p-4 min-h-32">
-            <p class="text-gray-800 text-lg whitespace-pre-wrap gothic-font"
-               x-text="profile?.stories || 'Нет записанных историй'"></p>
-          </div>
-        </div>
-      </div>
 
     </div>
 
@@ -258,155 +232,155 @@
     <div x-show="showSuccess" x-transition
          class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50"
          @click="showSuccess = false">
-      <div class="bg-white border-2 border-gray-700 rounded p-6 max-w-md mx-4 text-center shadow-xl" @click.stop>
-        <h3 class="gothic-font text-2xl text-gray-900 mb-3">
-          🎉 Титул расширен!
-        </h3>
-        <p class="text-gray-700 mb-5 gothic-font">
-          Ваш новый титул:<br>
-          <strong x-text="newTitle" class="text-xl"></strong>
-        </p>
-        <div class="space-x-3">
-          <button @click="showSuccess = false"
-                  class="bg-gray-700 text-white px-4 py-2 rounded gothic-font text-2xl hover:bg-gray-800 transition-colors">
-            Отлично!
-          </button>
+        <div class="bg-white border-2 border-gray-700 rounded p-6 max-w-md mx-4 text-center shadow-xl" @click.stop>
+            <h3 class="gothic-font text-2xl text-gray-900 mb-3">
+                🎉 Титул расширен!
+            </h3>
+            <p class="text-gray-700 mb-5 gothic-font">
+                Ваш новый титул:<br>
+                <strong x-text="newTitle" class="text-xl"></strong>
+            </p>
+            <div class="space-x-3">
+                <button @click="showSuccess = false"
+                        class="bg-gray-700 text-white px-4 py-2 rounded gothic-font text-2xl hover:bg-gray-800 transition-colors">
+                    Отлично!
+                </button>
+            </div>
         </div>
-      </div>
     </div>
 
     <!-- Error Message -->
     <div x-show="error" x-transition
          class="max-w-4xl mx-auto mt-8 bg-red-50 border border-red-300 text-red-700 px-5 py-3 rounded text-center text-2xl">
-      <p x-text="error"></p>
+        <p x-text="error"></p>
     </div>
 
     <!-- Footer -->
     <footer class="text-center text-gray-600 mt-12 pb-6 text-2xl">
-      <p class="gothic-font tracking-wide">
-        Во славу Коньячных Рыцарей и священного Коньячного Меча
-      </p>
-      <p class="mt-4 gothic-font">
-        Powered by Party Kaiser AI
-      </p>
+        <p class="gothic-font tracking-wide">
+            Во славу Коньячных Рыцарей и священного Коньячного Меча
+        </p>
+        <p class="mt-4 gothic-font">
+            Powered by Party Kaiser AI
+        </p>
     </footer>
-  </div>
+</div>
 
-  <script>
+<script>
     function profileManager() {
-      return {
-        isAuthenticated: false,
-        profile: null,
-        loading: false,
-        isLoggingIn: false,
-        isExpanding: false,
-        error: '',
-        showSuccess: false,
-        newTitle: '',
-        loginData: {
-          username: '',
-          password: ''
-        },
-        expansionData: {
-          achievements: '',
-          stories: ''
-        },
-        async init() {
-          const token = localStorage.getItem('token');
-          if (token) {
-            this.isAuthenticated = true;
-            await this.loadProfile();
-          }
-        },
-        async login() {
-          this.isLoggingIn = true;
-          this.error = '';
-          try {
-            const response = await fetch('/api/login', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify(this.loginData)
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Ошибка входа');
+        return {
+            isAuthenticated: false,
+            profile: null,
+            loading: false,
+            isLoggingIn: false,
+            isExpanding: false,
+            error: '',
+            showSuccess: false,
+            newTitle: '',
+            loginData: {
+                username: '',
+                password: ''
+            },
+            expansionData: {
+                achievements: '',
+                stories: ''
+            },
+            async init() {
+                const token = localStorage.getItem('token');
+                if (token) {
+                    this.isAuthenticated = true;
+                    await this.loadProfile();
+                }
+            },
+            async login() {
+                this.isLoggingIn = true;
+                this.error = '';
+                try {
+                    const response = await fetch('/api/login', {
+                        method: 'POST',
+                        headers: {'Content-Type': 'application/json'},
+                        body: JSON.stringify(this.loginData)
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Ошибка входа');
 
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('user', JSON.stringify(data.user));
-            this.isAuthenticated = true;
-            await this.loadProfile();
-          } catch (error) {
-            this.error = error.message || 'Произошла неожиданная ошибка';
-          } finally {
-            this.isLoggingIn = false;
-          }
-        },
-        async loadProfile() {
-          this.loading = true;
-          this.error = '';
-          try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/profile', {
-              headers: { 'Authorization': `Bearer ${token}` }
-            });
-            const data = await response.json();
-            if (!response.ok) {
-              if (response.status === 401) {
-                this.logout();
-                return;
-              }
-              throw new Error(data.error || 'Ошибка загрузки профиля');
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    this.isAuthenticated = true;
+                    await this.loadProfile();
+                } catch (error) {
+                    this.error = error.message || 'Произошла неожиданная ошибка';
+                } finally {
+                    this.isLoggingIn = false;
+                }
+            },
+            async loadProfile() {
+                this.loading = true;
+                this.error = '';
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('/api/profile', {
+                        headers: {'Authorization': `Bearer ${token}`}
+                    });
+                    const data = await response.json();
+                    if (!response.ok) {
+                        if (response.status === 401) {
+                            this.logout();
+                            return;
+                        }
+                        throw new Error(data.error || 'Ошибка загрузки профиля');
+                    }
+                    this.profile = data;
+                } catch (error) {
+                    this.error = error.message || 'Произошла неожиданная ошибка';
+                } finally {
+                    this.loading = false;
+                }
+            },
+            async expandTitle() {
+                this.isExpanding = true;
+                this.error = '';
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('/api/expand-title', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify(this.expansionData)
+                    });
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Ошибка расширения титула');
+
+                    this.newTitle = data.newTitle;
+                    this.showSuccess = true;
+                    this.expansionData = {achievements: '', stories: ''};
+                    await this.loadProfile();
+                } catch (error) {
+                    this.error = error.message || 'Произошла неожиданная ошибка';
+                } finally {
+                    this.isExpanding = false;
+                }
+            },
+            logout() {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                this.isAuthenticated = false;
+                this.profile = null;
+                this.loginData = {username: '', password: ''};
+            },
+            formatDate(dateString) {
+                if (!dateString) return '—';
+                const date = new Date(dateString);
+                return date.toLocaleDateString('ru-RU', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
             }
-            this.profile = data;
-          } catch (error) {
-            this.error = error.message || 'Произошла неожиданная ошибка';
-          } finally {
-            this.loading = false;
-          }
-        },
-        async expandTitle() {
-          this.isExpanding = true;
-          this.error = '';
-          try {
-            const token = localStorage.getItem('token');
-            const response = await fetch('/api/expand-title', {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              },
-              body: JSON.stringify(this.expansionData)
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error(data.error || 'Ошибка расширения титула');
-
-            this.newTitle = data.newTitle;
-            this.showSuccess = true;
-            this.expansionData = { achievements: '', stories: '' };
-            await this.loadProfile();
-          } catch (error) {
-            this.error = error.message || 'Произошла неожиданная ошибка';
-          } finally {
-            this.isExpanding = false;
-          }
-        },
-        logout() {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          this.isAuthenticated = false;
-          this.profile = null;
-          this.loginData = { username: '', password: '' };
-        },
-        formatDate(dateString) {
-          if (!dateString) return '—';
-          const date = new Date(dateString);
-          return date.toLocaleDateString('ru-RU', {
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          });
         }
-      }
     }
-  </script>
+</script>
 </body>
 </html>

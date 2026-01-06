@@ -1,0 +1,77 @@
+@import "tailwindcss";
+
+@font-face {
+    font-family: 'HelmswaldPost';
+    src: url('../helmswald-post-font/HelmswaldPost-1r2M.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Groundage';
+    src: url('../groundage/Groundage-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    /* Optional: improve rendering */
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Runtti';
+    src: url('../Runtti_SP_Cyrillic/RunttiSP-Bold.otf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+    /* Optional: improve rendering */
+    font-display: swap;
+}
+
+/*.gothic-font {*/
+/*    font-family: 'Groundage', serif; !* fallback to serif *!*/
+/*}*/
+
+.gothic-font {
+    font-family: 'Runtti', serif; /* fallback to serif */
+}
+
+.gothic-latin-font {
+    font-family: 'HelmswaldPost', serif;
+}
+
+.modern-font {
+    font-family: 'Inter', sans-serif;
+}
+
+.card-shadow {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.nav-btn{
+    @apply
+    bg-gray-100
+    text-gray-800
+    px-4
+    py-2
+    rounded
+    border
+    border-gray-300
+    hover:bg-gray-200
+    transition-colors
+    text-2xl
+}
+
+.img-icon{
+    @apply
+    max-w-8
+    max-h-8
+}
+
+.label-with-icon{
+    @apply
+    flex flex-row gap-2 items-center text-2xl font-medium text-gray-800 mb-2
+}
+
+.label-with-icon-border{
+    @apply
+    flex flex-col gap-2 items-center bg-gray-100 border border-gray-300 rounded p-4 text-center
+}

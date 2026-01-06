@@ -4,56 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Генератор Титулов Пати-Райха</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        gothic: ['"HelmswaldPost"', 'serif'],
-                    }
-                }
-            }
-        }
-    </script>
+    <link rel="stylesheet" href="/css/output.css">
     <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <style>
-        @font-face {
-            font-family: 'HelmswaldPost';
-            src: url('/helmswald-post-font/HelmswaldPost-1r2M.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-            /* Optional: improve rendering */
-            font-display: swap;
-        }
-
-        @font-face {
-            font-family: 'Groundage';
-            src: url('/groundage/Groundage-Regular.ttf') format('truetype');
-            font-weight: normal;
-            font-style: normal;
-            /* Optional: improve rendering */
-            font-display: swap;
-        }
-
-        .gothic-font {
-            font-family: 'Groundage', serif; /* fallback to serif */
-
-        }
-
-        .gothic-latin-font {
-            font-family: 'HelmswaldPost', serif;
-        }
-
-        .modern-font {
-            font-family: 'Inter', sans-serif;
-        }
-    </style>
 </head>
 <body class="modern-font bg-white text-gray-800 min-h-screen">
 <div x-data="titleGenerator()" x-init="init()" class="container mx-auto px-4 py-8">
     <!-- Header -->
-    <div class="text-center mb-8 justify-center flex flex-col ">
+    <div class="text-center mb-8 justify-center flex flex-col">
         <img src="img/partyreich.png" class="mb-3 max-w-sm md:max-w-lg tracking-wide self-center">
 <!--        <h1 class="gothic-latin-font text-5xl font-normal text-gray-900 mb-3 tracking-wide">-->
 <!--            Party-Reich-->
@@ -67,15 +24,15 @@
         <!-- Navigation -->
         <div class="mt-6 gap-1 md:flex-row flex-col flex justify-center">
             <a href="/hall-of-fame"
-               class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors  text-2xl gothic-font">
+               class="nav-btn gothic-font">
                 Зал Славы
             </a>
             <a href="/profile"
-               class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors  text-2xl gothic-font">
+               class="nav-btn gothic-font">
                 Профиль
             </a>
             <a x-show="user && user.role === 'admin'" href="/admin"
-               class="bg-gray-100 text-gray-800 px-4 py-2 rounded border border-gray-300 hover:bg-gray-200 transition-colors  text-2xl gothic-font">
+               class="nav-btn gothic-font">
                 Админ-панель
             </a>
         </div>
@@ -92,8 +49,8 @@
         <form @submit.prevent="generateTitle" class="p-6 space-y-5">
             <!-- Name Field -->
             <div>
-                <label class="flex flex-row gap-2 align-center text-2xl font-medium text-gray-800 mb-2 gothic-font">
-                    <img src="img/crown.png" class="max-w-8">
+                <label class="label-with-icon gothic-font">
+                    <img src="img/crown.png" class="img-icon">
                     Имя будущего подданного *
                 </label>
                 <input
@@ -107,8 +64,8 @@
 
             <!-- Location Field -->
             <div>
-                <label class="flex flex-row gap-2 align-center text-2xl font-medium text-gray-800 mb-2 gothic-font">
-                    <img src="img/star.png" class="max-w-8">
+                <label class="label-with-icon gothic-font">
+                    <img src="img/star.png" class="img-icon">
                     Место происхождения
                 </label>
                 <input
@@ -121,8 +78,8 @@
 
             <!-- Request Type -->
             <div>
-                <label class="flex flex-row gap-2 align-center text-2xl font-medium text-gray-800 mb-2 gothic-font">
-                    <img src="img/book.png" class="max-w-8">
+                <label class="label-with-icon gothic-font">
+                    <img src="img/book.png" class="img-icon">
                     Тип запроса
                 </label>
                 <select
@@ -139,8 +96,8 @@
 
             <!-- Achievements Field -->
             <div>
-                <label class="flex flex-row gap-2 align-center text-2xl font-medium text-gray-800 mb-2 gothic-font">
-                    <img src="img/trumpet.png" class="max-w-8">
+                <label class="label-with-icon gothic-font">
+                    <img src="img/trumpet.png" class="img-icon">
                     Достижения и заслуги *
                 </label>
                 <textarea
@@ -154,8 +111,8 @@
 
             <!-- Stories Field -->
             <div>
-                <label class="flex flex-row gap-2 align-center text-2xl font-medium text-gray-800 mb-2 gothic-font">
-                    <img src="img/scroll.png" class="max-w-8">
+                <label class="label-with-icon gothic-font">
+                    <img src="img/scroll.png" class="img-icon">
                     Истории и легенды
                 </label>
                 <textarea
