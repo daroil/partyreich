@@ -94,6 +94,66 @@
             </div>
         </div>
 
+        <!-- Pending Title Requests -->
+        <div class="max-w-4xl mx-auto bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden">
+            <div class="bg-gray-800 p-5">
+                <h2 class="gothic-font text-3xl font-normal text-white text-center tracking-wide">
+                    Ожидающие Одобрения Титулов
+                </h2>
+            </div>
+            <div x-show="pendingRequests.length === 0" class="p-6 text-center text-xl gothic-font text-gray-600">
+                Нет ожидающих запросов
+            </div>
+            <div x-show="pendingRequests.length > 0" class="p-6 space-y-4">
+                <template x-for="request in pendingRequests" :key="request.id">
+                    <div class="bg-white border border-gray-400 rounded p-4">
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                            <div>
+                                <p class="text-sm text-gray-500 gothic-font">Пользователь</p>
+                                <p class="font-semibold text-xl gothic-font" x-text="request.full_name"></p>
+                                <p class="text-gray-600" x-text="`@${request.username}`"></p>
+                            </div>
+                            <div>
+                                <p class="text-sm text-gray-500 gothic-font">Тип запроса</p>
+                                <p class="text-xl gothic-font"
+                                   x-text="request.request_type === 'new' ? 'Новый титул' : 'Расширение титула'"></p>
+                                <p class="text-gray-600 text-sm" x-text="formatDate(request.created_at)"></p>
+                            </div>
+                        </div>
+                        <div x-show="request.current_title" class="mb-3">
+                            <p class="text-sm text-gray-500 gothic-font">Текущий титул</p>
+                            <p class="text-gray-700 gothic-font" x-text="request.current_title"></p>
+                        </div>
+                        <div class="mb-3">
+                            <p class="text-sm text-gray-500 gothic-font">Предлагаемый титул</p>
+                            <p class="text-xl font-semibold text-gray-900 gothic-font"
+                               x-text="request.proposed_title"></p>
+                        </div>
+                        <div class="mb-3">
+                            <p class="text-sm text-gray-500 gothic-font">Достижения</p>
+                            <p class="text-gray-700 gothic-font whitespace-pre-wrap" x-text="request.achievements"></p>
+                        </div>
+                        <div x-show="request.stories" class="mb-3">
+                            <p class="text-sm text-gray-500 gothic-font">Истории</p>
+                            <p class="text-gray-700 gothic-font whitespace-pre-wrap" x-text="request.stories"></p>
+                        </div>
+                        <div class="flex flex-wrap gap-2">
+                            <button
+                                    @click="openReviewModal(request, 'approve')"
+                                    class="flex-1 bg-green-600 text-white px-4 py-2 rounded gothic-font text-xl hover:bg-green-700 transition-colors">
+                                ✓ Одобрить
+                            </button>
+                            <button
+                                    @click="openReviewModal(request, 'reject')"
+                                    class="flex-1 bg-red-600 text-white px-4 py-2 rounded gothic-font text-xl hover:bg-red-700 transition-colors">
+                                ✗ Отклонить
+                            </button>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+
         <!-- Search & Filter -->
         <div class="max-w-4xl mx-auto bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden">
             <div class="p-5 space-y-4">
@@ -417,6 +477,67 @@
         </div>
     </div>
 
+    <!-- Review Modal -->
+    <div x-show="showReviewModal" x-transition
+         class="fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center z-50 p-4"
+         @click="showReviewModal = false">
+        <div class="bg-white border-2 border-gray-700 rounded p-6 max-w-2xl w-full shadow-xl" @click.stop>
+            <h3 class="gothic-font text-3xl text-gray-900 text-center mb-4"
+                x-text="reviewAction === 'approve' ? '✓ Одобрение Титула' : '✗ Отклонение Титула'">
+            </h3>
+            <div class="space-y-4">
+                <div>
+                    <p class="text-xl gothic-font mb-2">Пользователь: <span x-text="selectedRequest?.full_name"></span>
+                    </p>
+                    <p class="text-xl gothic-font mb-2">Предлагаемый титул:</p>
+                    <p class="text-gray-800 gothic-font bg-gray-50 p-3 rounded"
+                       x-text="selectedRequest?.proposed_title"></p>
+                </div>
+                <div>
+                    <label class="block text-xl font-medium text-gray-800 mb-2 gothic-font">
+                        Комментарий (необязательно)
+                    </label>
+                    <textarea
+                            x-model="reviewNotes"
+                            rows="3"
+                            placeholder="Добавьте комментарий..."
+                            class="w-full px-4 py-3 border border-gray-400 rounded bg-white focus:border-gray-700 focus:outline-none focus:ring-1 focus:ring-gray-600 resize-none"
+                    ></textarea>
+                </div>
+                <div x-show="reviewError"
+                     class="bg-red-50 border border-red-300 text-red-700 px-4 py-3 rounded text-center text-xl">
+                    <p x-text="reviewError"></p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+                    <button
+                            @click="submitReview"
+                            :disabled="isLoading"
+                            :class="reviewAction === 'approve' ? 'bg-green-600 hover:bg-green-700' : 'bg-red-600 hover:bg-red-700'"
+                            class="text-white px-5 py-2.5 rounded gothic-font text-2xl transition-colors disabled:opacity-50"
+                    >
+                        <span x-show="!isLoading"
+                              x-text="reviewAction === 'approve' ? '✓ Одобрить' : '✗ Отклонить'"></span>
+                        <span x-show="isLoading" class="flex items-center justify-center">
+                        <svg class="animate-spin h-5 w-5 mr-2" viewBox="0 0 24 24">
+                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"
+                                    fill="none"></circle>
+                            <path class="opacity-75" fill="currentColor"
+                                  d="m4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 0 1 4 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Обработка...
+                    </span>
+                    </button>
+                    <button
+                            @click="showReviewModal = false"
+                            class="bg-gray-600 text-white px-5 py-2.5 rounded gothic-font text-2xl hover:bg-gray-700 transition-colors"
+                    >
+                        Отмена
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <footer class="text-center text-gray-600 mt-12 pb-6 text-2xl">
         <p class="gothic-font tracking-wide">
@@ -433,6 +554,7 @@
         return {
             users: [],
             filteredUsers: [],
+            pendingRequests: [],
             searchTerm: '',
             filterRole: 'all',
             isAuthorized: false,
@@ -442,7 +564,12 @@
             showEditModal: false,
             showPasswordModal: false,
             showHistoryModal: false,
+            showReviewModal: false,
             selectedUser: null,
+            selectedRequest: null,
+            reviewAction: '',
+            reviewNotes: '',
+            reviewError: '',
             editForm: {
                 achievements: '',
                 stories: '',
@@ -482,11 +609,73 @@
                     this.filteredUsers = [...data];
                     this.isAuthorized = true;
                     this.filterUsers();
+
+                    // Load pending requests
+                    await this.loadPendingRequests();
                 } catch (error) {
                     this.error = error.message || 'Произошла ошибка';
                     this.isAuthorized = false;
                 } finally {
                     this.loading = false;
+                }
+            },
+
+            async loadPendingRequests() {
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch('/api/admin/title-requests', {
+                        headers: {'Authorization': `Bearer ${token}`}
+                    });
+                    const data = await response.json();
+                    if (response.ok) {
+                        this.pendingRequests = data;
+                    }
+                } catch (error) {
+                    console.error('Error loading pending requests:', error);
+                }
+            },
+
+            openReviewModal(request, action) {
+                this.selectedRequest = request;
+                this.reviewAction = action;
+                this.reviewNotes = '';
+                this.reviewError = '';
+                this.showReviewModal = true;
+            },
+
+            async submitReview() {
+                if (!this.selectedRequest) return;
+
+                this.isLoading = true;
+                this.reviewError = '';
+
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`/api/admin/title-requests/${this.selectedRequest.id}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Authorization': `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            action: this.reviewAction,
+                            reviewNotes: this.reviewNotes
+                        })
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Ошибка обработки запроса');
+
+                    // Refresh data
+                    await this.loadPendingRequests();
+                    await this.init();
+
+                    this.showReviewModal = false;
+                    this.selectedRequest = null;
+                } catch (error) {
+                    this.reviewError = error.message || 'Произошла ошибка';
+                } finally {
+                    this.isLoading = false;
                 }
             },
 

@@ -49,6 +49,24 @@ CREATE TABLE IF NOT EXISTS title_history (
     FOREIGN KEY (modified_by) REFERENCES users(id)
 )
 `);
+        db.run(`
+CREATE TABLE IF NOT EXISTS title_requests (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    user_id INTEGER,
+    request_type TEXT, -- 'new' or 'expansion'
+    current_title TEXT,
+    proposed_title TEXT,
+    achievements TEXT,
+    stories TEXT,
+    status TEXT DEFAULT 'pending', -- 'pending', 'approved', 'rejected'
+    reviewed_by INTEGER,
+    review_notes TEXT,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+    reviewed_at DATETIME,
+    FOREIGN KEY (user_id) REFERENCES users(id),
+    FOREIGN KEY (reviewed_by) REFERENCES users(id)
+)
+`);
     }
 });
 
@@ -149,23 +167,42 @@ app.post('/api/register', async (req, res) => {
             // Hash password
             const passwordHash = await bcrypt.hash(password, 10);
 
-            // Insert user
+            // Insert user WITHOUT title (pending approval)
             db.run(
-                `INSERT INTO users (username, password_hash, email, full_name, location, title, achievements, stories, oath_taken)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
-                [username, passwordHash, email, fullName, tempData.location, tempData.title, tempData.achievements, tempData.stories],
+                `INSERT INTO users (username, password_hash, email, full_name, location, achievements, stories, oath_taken)
+VALUES (?, ?, ?, ?, ?, ?, ?, 0)`,
+                [username, passwordHash, email, fullName, tempData.location, tempData.achievements, tempData.stories],
                 function(err) {
                     if (err) {
                         return res.status(500).json({ error: 'Ошибка создания аккаунта' });
                     }
 
-                    const token = jwt.sign(
-                        { id: this.lastID, username, role: 'user' },
-                        process.env.JWT_SECRET || 'partyreich_secret',
-                        { expiresIn: '24h' }
-                    );
+                    const userId = this.lastID;
 
-                    res.json({ success: true, token, user: { id: this.lastID, username, fullName, role: 'user' } });
+                    // Create title request
+                    db.run(
+                        `INSERT INTO title_requests (user_id, request_type, proposed_title, achievements, stories, status)
+VALUES (?, 'new', ?, ?, ?, 'pending')`,
+                        [userId, tempData.title, tempData.achievements, tempData.stories],
+                        (err) => {
+                            if (err) {
+                                console.error('Error creating title request:', err);
+                            }
+
+                            const token = jwt.sign(
+                                { id: userId, username, role: 'user' },
+                                process.env.JWT_SECRET || 'partyreich_secret',
+                                { expiresIn: '24h' }
+                            );
+
+                            res.json({
+                                success: true,
+                                token,
+                                user: { id: userId, username, fullName, role: 'user' },
+                                message: 'Регистрация успешна! Ваш титул ожидает одобрения администратором.'
+                            });
+                        }
+                    );
                 }
             );
         });
@@ -174,6 +211,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, 1)`,
         res.status(500).json({ error: 'Ошибка сервера' });
     }
 });
+
 
 app.post('/api/login', (req, res) => {
     try {
@@ -216,6 +254,7 @@ app.post('/api/login', (req, res) => {
 });
 
 // Title generation (now stores in temp for account creation)
+// Title generation (now creates a pending request)
 app.post('/generate-title', async (req, res) => {
     try {
         const { name, location, achievements, stories, requestType } = req.body;
@@ -256,7 +295,8 @@ app.post('/generate-title', async (req, res) => {
             success: true,
             title: generatedTitle,
             oath: "Я клянусь быть с тобой мой Пати-кайзер, в радости и печали, болезни и здравии, в богатстве и бедности, любить тебя и оберегать наш союз до конца жизни, а так же клянусь в верности пати райху, обязаюсь верно и добросовестно поддерживать огонь пати харда в своем сердце и сердце своего кайзера.",
-            tempData: { name, location, achievements, stories, title: generatedTitle }
+            tempData: { name, location, achievements, stories, title: generatedTitle },
+            requiresApproval: true
         });
 
     } catch (error) {
@@ -310,7 +350,7 @@ app.post('/api/expand-title', authenticateToken, async (req, res) => {
             // Create prompt for title expansion
             let userPrompt = `Расширь существующий титул на основе новых достижений:
 
-    Текущий титул: ${user.title}
+Текущий титул: ${user.title}
 Имя: ${user.full_name}
 Место происхождения: ${user.location || 'Неизвестно'}
 Старые достижения: ${user.achievements}
@@ -334,21 +374,20 @@ app.post('/api/expand-title', authenticateToken, async (req, res) => {
 
                 const newTitle = completion.choices[0].message.content.trim();
 
-                // Save old title to history
+                // Create title request instead of directly updating
                 db.run(
-                    'INSERT INTO title_history (user_id, old_title, new_title, reason, modified_by) VALUES (?, ?, ?, ?, ?)',
-                    [user.id, user.title, newTitle, 'Расширение титула пользователем', user.id]
-                );
-
-                // Update user
-                db.run(
-                    'UPDATE users SET title = ?, achievements = ?, stories = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
-                    [newTitle, user.achievements + '\n\n' + achievements, (user.stories || '') + '\n\n' + stories, user.id],
+                    `INSERT INTO title_requests (user_id, request_type, current_title, proposed_title, achievements, stories, status)
+VALUES (?, 'expansion', ?, ?, ?, ?, 'pending')`,
+                    [user.id, user.title, newTitle, achievements, stories],
                     (err) => {
                         if (err) {
                             return res.status(500).json({ error: 'Database error' });
                         }
-                        res.json({ success: true, newTitle });
+                        res.json({
+                            success: true,
+                            newTitle,
+                            message: 'Запрос на расширение титула отправлен! Ожидайте одобрения администратором.'
+                        });
                     }
                 );
             } catch (apiError) {
@@ -506,6 +545,106 @@ WHERE th.user_id = ?
             res.json(history);
         }
     );
+});
+
+// Get pending title requests
+app.get('/api/admin/title-requests', authenticateToken, requireAdmin, (req, res) => {
+    db.all(
+        `SELECT tr.*, u.username, u.full_name, u.location
+FROM title_requests tr
+JOIN users u ON tr.user_id = u.id
+WHERE tr.status = 'pending'
+    ORDER BY tr.created_at ASC`,
+        [],
+        (err, requests) => {
+            if (err) {
+                return res.status(500).json({ error: 'Database error' });
+            }
+            res.json(requests);
+        }
+    );
+});
+
+// Approve or reject title request
+app.put('/api/admin/title-requests/:id', authenticateToken, requireAdmin, (req, res) => {
+    try {
+        const { action, reviewNotes } = req.body; // action: 'approve' or 'reject'
+        const requestId = req.params.id;
+
+        if (!['approve', 'reject'].includes(action)) {
+            return res.status(400).json({ error: 'Invalid action' });
+        }
+
+        // Get the request
+        db.get('SELECT * FROM title_requests WHERE id = ?', [requestId], (err, request) => {
+            if (err || !request) {
+                return res.status(404).json({ error: 'Request not found' });
+            }
+
+            const newStatus = action === 'approve' ? 'approved' : 'rejected';
+
+            // Update request status
+            db.run(
+                `UPDATE title_requests SET status = ?, reviewed_by = ?, review_notes = ?, reviewed_at = CURRENT_TIMESTAMP WHERE id = ?`,
+                [newStatus, req.user.id, reviewNotes, requestId],
+                (err) => {
+                    if (err) {
+                        return res.status(500).json({ error: 'Database error' });
+                    }
+
+                    if (action === 'approve') {
+                        // Update user's title
+                        if (request.request_type === 'new') {
+                            // New title
+                            db.run(
+                                'UPDATE users SET title = ?, oath_taken = 1, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                                [request.proposed_title, request.user_id],
+                                (err) => {
+                                    if (err) {
+                                        return res.status(500).json({ error: 'Database error' });
+                                    }
+                                    res.json({ success: true, message: 'Титул одобрен и применён' });
+                                }
+                            );
+                        } else {
+                            // Title expansion
+                            // Save to history
+                            db.run(
+                                'INSERT INTO title_history (user_id, old_title, new_title, reason, modified_by) VALUES (?, ?, ?, ?, ?)',
+                                [request.user_id, request.current_title, request.proposed_title, 'Одобрено администратором', req.user.id]
+                            );
+
+                            // Update user
+                            db.get('SELECT achievements, stories FROM users WHERE id = ?', [request.user_id], (err, user) => {
+                                if (err) {
+                                    return res.status(500).json({ error: 'Database error' });
+                                }
+
+                                const updatedAchievements = (user.achievements || '') + '\n\n' + request.achievements;
+                                const updatedStories = (user.stories || '') + '\n\n' + request.stories;
+
+                                db.run(
+                                    'UPDATE users SET title = ?, achievements = ?, stories = ?, updated_at = CURRENT_TIMESTAMP WHERE id = ?',
+                                    [request.proposed_title, updatedAchievements, updatedStories, request.user_id],
+                                    (err) => {
+                                        if (err) {
+                                            return res.status(500).json({ error: 'Database error' });
+                                        }
+                                        res.json({ success: true, message: 'Расширение титула одобрено и применено' });
+                                    }
+                                );
+                            });
+                        }
+                    } else {
+                        res.json({ success: true, message: 'Запрос отклонён' });
+                    }
+                }
+            );
+        });
+    } catch (error) {
+        console.error('Admin request review error:', error);
+        res.status(500).json({ error: 'Ошибка сервера' });
+    }
 });
 
 app.listen(port, () => {

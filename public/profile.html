@@ -234,11 +234,14 @@
          @click="showSuccess = false">
         <div class="bg-white border-2 border-gray-700 rounded p-6 max-w-md mx-4 text-center shadow-xl" @click.stop>
             <h3 class="gothic-font text-2xl text-gray-900 mb-3">
-                🎉 Титул расширен!
+                🎉 Запрос отправлен!
             </h3>
-            <p class="text-gray-700 mb-5 gothic-font">
+            <p class="text-gray-700 mb-3 gothic-font">
                 Ваш новый титул:<br>
                 <strong x-text="newTitle" class="text-xl"></strong>
+            </p>
+            <p class="text-gray-600 gothic-font mb-5">
+                Ожидайте одобрения администратором
             </p>
             <div class="space-x-3">
                 <button @click="showSuccess = false"
