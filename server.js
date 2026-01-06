@@ -647,6 +647,40 @@ app.put('/api/admin/title-requests/:id', authenticateToken, requireAdmin, (req, 
     }
 });
 
+// Delete user (admin)
+app.delete('/api/admin/users/:id', authenticateToken, requireAdmin, (req, res) => {
+    const userId = req.params.id;
+
+    db.run('DELETE FROM users WHERE id = ?', [userId], function(err) {
+        if (err) {
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        // Also delete related data
+        db.run('DELETE FROM title_requests WHERE user_id = ?', [userId]);
+        db.run('DELETE FROM title_history WHERE user_id = ?', [userId]);
+
+        res.json({ success: true, message: 'Пользователь удалён' });
+    });
+});
+
+// Delete own account (user)
+app.delete('/api/profile', authenticateToken, (req, res) => {
+    const userId = req.user.id;
+
+    db.run('DELETE FROM users WHERE id = ?', [userId], function(err) {
+        if (err) {
+            return res.status(500).json({ error: 'Database error' });
+        }
+
+        // Also delete related data
+        db.run('DELETE FROM title_requests WHERE user_id = ?', [userId]);
+        db.run('DELETE FROM title_history WHERE user_id = ?', [userId]);
+
+        res.json({ success: true, message: 'Аккаунт удалён' });
+    });
+});
+
 app.listen(port, () => {
     console.log(`Partyreich Title Generator running on http://localhost:${port}`);
     console.log('Make sure to set your OPENAI_API_KEY in .env file');

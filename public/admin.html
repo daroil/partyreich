@@ -229,6 +229,11 @@
                                             class="flex flex-1 justify-center bg-gray-600 text-white px-3 py-1.5 rounded gothic-font text-sm hover:bg-gray-700 transition-colors">
                                         История
                                     </button>
+                                    <button
+                                            @click="deleteUser(user)"
+                                            class="flex flex-1 justify-center bg-red-600 text-white px-3 py-1.5 rounded gothic-font text-sm hover:bg-red-700 transition-colors">
+                                        Удалить
+                                    </button>
                                 </div>
                             </td>
                         </tr>
@@ -815,6 +820,33 @@
                     this.error = error.message || 'Произошла ошибка';
                 } finally {
                     this.historyLoading = false;
+                }
+            },
+
+            async deleteUser(user) {
+                if (!confirm(`Вы уверены, что хотите удалить пользователя ${user.full_name}?`)) {
+                    return;
+                }
+
+                this.isLoading = true;
+                this.error = '';
+
+                try {
+                    const token = localStorage.getItem('token');
+                    const response = await fetch(`/api/admin/users/${user.id}`, {
+                        method: 'DELETE',
+                        headers: {'Authorization': `Bearer ${token}`}
+                    });
+
+                    const data = await response.json();
+                    if (!response.ok) throw new Error(data.error || 'Ошибка удаления пользователя');
+
+                    // Refresh users list
+                    await this.init();
+                } catch (error) {
+                    this.error = error.message || 'Произошла ошибка при удалении пользователя';
+                } finally {
+                    this.isLoading = false;
                 }
             },
 
