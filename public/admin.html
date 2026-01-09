@@ -39,7 +39,7 @@
     <div x-show="!isAuthorized && !loading"
          class="max-w-4xl mx-auto bg-gray-50 border border-gray-300 rounded shadow-md overflow-hidden">
         <div class="bg-gray-800 p-5">
-            <h2 class="gothic-latin-font text-4xl font-normal text-white text-center tracking-wide">
+            <h2 class="gothic-font text-4xl font-normal text-white text-center tracking-wide">
                 🚫 Доступ Запрещён
             </h2>
         </div>
@@ -79,7 +79,7 @@
             </div>
             <div class="label-with-icon-border">
                 <img src="img/candle.png" class="img-icon">
-                <div class="text-2xl font-bold gothic-font" x-text="users.filter(u => u.oath_taken).length"></div>
+                <div class="text-2xl font-bold gothic-font" x-text="users.filter(u => u.oath_taken).length - users.filter(u => u.role === 'admin').length"></div>
                 <div class="text-gray-600 gothic-font">Подданных</div>
             </div>
             <div class="label-with-icon-border">
